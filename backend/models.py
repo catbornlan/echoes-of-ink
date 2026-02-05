@@ -58,7 +58,7 @@ class Message(BaseModel):
     speaker: str  # 发言者名字
     content: str  # 发言内容
     action: Optional[str] = None  # 形态描写
-    timestamp: int  # 时间戳（秒）
+    timestamp: int = 0  # 时间戳（秒）
     is_player: bool = False  # 是否是玩家
 
 

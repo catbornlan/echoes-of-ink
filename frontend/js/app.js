@@ -183,6 +183,9 @@ async function selectCharacter(character) {
         // 获取角色剧本
         const script = await gameState.getCharacterScript(character.id);
 
+        // 更新侧边栏以显示剧本
+        ui.updateSidebar();
+
         ui.showLoading(false);
 
         // 进入剧本阅读阶段
@@ -293,7 +296,20 @@ function waitForPlayerIntro(playerChar) {
         input.placeholder = '输入你的自我介绍…';
         input.focus();
 
-        // 创建临时处理函数
+        // 创建清理函数
+        const cleanup = () => {
+            sendBtn.removeEventListener('click', handleIntro);
+            input.removeEventListener('keypress', handleKeyPress);
+        };
+
+        // 处理回车
+        const handleKeyPress = (e) => {
+            if (e.key === 'Enter') {
+                handleIntro();
+            }
+        };
+
+        // 处理提交
         const handleIntro = async () => {
             const content = input.value.trim();
             if (!content) {
@@ -313,17 +329,9 @@ function waitForPlayerIntro(playerChar) {
             input.disabled = true;
             sendBtn.disabled = true;
 
-            // 移除事件监听
-            sendBtn.removeEventListener('click', handleIntro);
-            input.removeEventListener('keypress', handleKeyPress);
-
+            // 移除事件监听并完成
+            cleanup();
             resolve();
-        };
-
-        const handleKeyPress = (e) => {
-            if (e.key === 'Enter') {
-                handleIntro();
-            }
         };
 
         sendBtn.addEventListener('click', handleIntro);
@@ -353,9 +361,8 @@ async function sendPlayerMessage() {
         timestamp: Date.now()
     };
 
-    // 显示消息
+    // 显示消息（只添加到UI，不需要双重添加）
     ui.addMessage(message);
-    await gameState.addMessage(message);
 
     // 清空输入框
     input.value = '';
@@ -504,7 +511,7 @@ async function handleDiscussionInput(playerMessage) {
         const mentionMatch = playerMessage.match(/「([\u4e00-\u9fa5]+)」/);
         const mentionedCharacter = mentionMatch ? mentionMatch[1] : null;
 
-        // 添加玩家消息
+        // 添加玩家消息（只添加到UI，不需要双重添加）
         const message = {
             speaker: gameState.getCharacter(gameState.playerCharacter).name,
             content: playerMessage,
@@ -512,7 +519,6 @@ async function handleDiscussionInput(playerMessage) {
             timestamp: Date.now()
         };
         ui.addMessage(message);
-        await gameState.addMessage(message);
 
         // 清空输入框
         document.getElementById('player-input').value = '';
@@ -598,11 +604,18 @@ async function handlePlayerInterruption(playerInput) {
 // 推进到下一环节
 async function advanceToNextPhase() {
     try {
-        ui.showLoading(true, '搜证中', '仔细翻找着眼前的线索，似乎触碰到了真相的边缘…');
+        ui.showLoading(true, '切换环节', '正在准备下一环节…');
 
-        // 生成环节过渡描写
-        const narrative = await gameState.getPhaseTransition(gameState.currentPhase);
-        ui.showPhaseNarrative(narrative.narrative);
+        // 只有在当前阶段明确且不是intro时才获取过渡描写
+        if (gameState.currentPhase && gameState.currentPhase !== 'intro') {
+            try {
+                const narrative = await gameState.getPhaseTransition(gameState.currentPhase);
+                ui.showPhaseNarrative(narrative.narrative);
+            } catch (err) {
+                console.warn('Failed to get phase transition narrative:', err);
+                // 继续执行，不影响阶段推进
+            }
+        }
 
         // 推进阶段
         const newPhase = await gameState.advancePhase();
@@ -651,40 +664,27 @@ let currentSearchRound = 1;
 function startSearchPhase(phase) {
     console.log(`开始搜证环节: ${phase}, 轮次: ${currentSearchRound}`);
 
+    // 切换到搜证页面
+    goToPhase(GAME_PHASES.SEARCH);
+
     // 禁用输入框（搜证环节不可发言）
     if (window.updateInputState) {
         window.updateInputState();
     }
 
-    goToPhase(GAME_PHASES.SEARCH);
+    // 更新阶段指示器
     ui.updatePhaseIndicator(phase === 'search_1' ? 'search1' : 'search2');
 
-    // 设置行动点数
-    currentActionPoints = gameState.currentPhase === 'search_1' ? 5 : 3;
+    // 确定当前搜证轮次
     currentSearchRound = gameState.currentPhase === 'search_1' ? 1 : 2;
 
-    // 显示当前轮次和行动点
-    document.getElementById('search-round-info').textContent = currentSearchRound === 1 ? '第一轮' : '第二轮';
-    updateActionPointsDisplay();
-
-    // 触发AI搜证
-    setTimeout(() => {
-        triggerAISearch();
-    }, 2000);
-
-    // 每隔10-15秒触发一次AI搜证，直到搜证环节结束
-    const aiSearchInterval = setInterval(() => {
-        if (gameState.currentPhase.startsWith('search_')) {
-            triggerAISearch();
-        } else {
-            clearInterval(aiSearchInterval);
-        }
-    }, Math.random() * 5000 + 10000); // 10-15秒随机间隔
+    // 设置行动点数
     currentActionPoints = currentSearchRound === 1 ? gameState.actionPoints.round1 : gameState.actionPoints.round2;
 
-    updateActionPointsDisplay();
+    // 显示当前轮次和行动点
     document.getElementById('search-round-info').textContent =
         currentSearchRound === 1 ? '第一轮搜证（不可深度调查）' : '第二轮搜证（可深度调查）';
+    updateActionPointsDisplay();
 
     const collectedIds = (gameState.collectedEvidence || []).map(e => e.id);
 
@@ -699,7 +699,7 @@ function startSearchPhase(phase) {
         }
 
         try {
-            ui.showLoading(true, '深度调查', '重新审视这些证据，也许能发现之前忽略的细节…');
+            ui.showLoading(true, '搜证中', isDeep ? '重新审视这些证据，也许能发现之前忽略的细节…' : '仔细搜索着每一个角落...');
 
             let found;
             if (isDeep && evidenceId) {
@@ -730,9 +730,9 @@ function startSearchPhase(phase) {
 
                 // 检查玩家是否花完所有点数
                 if (currentActionPoints === 0) {
-                    ui.showToast('搜证点数已用完，自动进入下一环节', 'success');
+                    ui.showToast('搜证点数已用完，等待其他角色搜证完成...', 'success');
                     setTimeout(async () => {
-                        await triggerAISearch(); // 最后一次AI搜证
+                        await triggerNPCSearch(); // NPC搜证
                         await advanceToNextPhase(); // 自动进入下一环节
                     }, 2000);
                 }
@@ -750,11 +750,86 @@ function startSearchPhase(phase) {
 
     // 初次渲染地点列表
     ui.renderLocations(gameState.locations, searchHandler, collectedIds, currentSearchRound === 2);
+}
 
-    // 启动AI自动搜证 (整合原ai-search.js逻辑)
-    startAIAutoSearch();
+// NPC随机搜证（玩家搜证完成后触发）
+async function triggerNPCSearch() {
+    console.log('[NPC搜证] 开始NPC随机搜证');
 
-    goToPhase(GAME_PHASES.SEARCH);
+    try {
+        ui.addMessage({
+            speaker: '系统',
+            content: '其他角色开始搜证...',
+            is_player: false
+        });
+
+        // 获取所有NPC角色（排除玩家）
+        const allCharacters = gameState.characters.filter(c => c.id !== gameState.playerCharacter);
+
+        // 获取所有地点和证据
+        const locations = gameState.locations || [];
+        const allEvidence = gameState.allEvidence || [];
+
+        // 每个NPC的行动点数
+        const pointsPerNPC = currentSearchRound === 1 ? gameState.actionPoints.round1 : gameState.actionPoints.round2;
+
+        // 为每个NPC随机搜证
+        for (const character of allCharacters) {
+            let npcPoints = pointsPerNPC;
+            const foundEvidence = [];
+
+            // 用完该NPC的所有行动点
+            while (npcPoints > 0 && locations.length > 0) {
+                // 随机选择一个地点
+                const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+
+                // 在该地点找可用证据（未被玩家或其他NPC收集）
+                const availableEvidence = allEvidence.filter(e =>
+                    e.location_id === randomLocation.id &&
+                    !gameState.collectedEvidence.some(collected => collected.id === e.id) &&
+                    !foundEvidence.some(found => found.id === e.id)
+                );
+
+                // 如果有可用证据，20%概率找到
+                if (availableEvidence.length > 0 && Math.random() < 0.2) {
+                    const evidence = availableEvidence[0];
+                    foundEvidence.push({
+                        ...evidence,
+                        location: randomLocation.name,
+                        character: character.name
+                    });
+                }
+
+                npcPoints--;
+
+                // 添加延迟以模拟真实搜证过程
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            // 显示该NPC找到的证据
+            for (const evidence of foundEvidence) {
+                ui.addMessage({
+                    speaker: '系统',
+                    content: `${evidence.character}在${evidence.location}发现了「${evidence.label}」`,
+                    is_player: false,
+                    timestamp: Date.now()
+                });
+
+                // 延迟显示，让消息逐个出现
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+        }
+
+        ui.addMessage({
+            speaker: '系统',
+            content: '所有角色搜证完成，准备进入下一环节...',
+            is_player: false
+        });
+
+    } catch (error) {
+        console.error('[NPC搜证] 错误:', error);
+        ui.showToast('NPC搜证出现错误', 'error');
+    }
 }
 
 // AI自动搜证相关的全局变量
@@ -801,7 +876,17 @@ async function performAISearchStep() {
 
 // 更新行动点数显示
 function updateActionPointsDisplay() {
-    document.getElementById('search-action-points').textContent = currentActionPoints;
+    // 更新搜证页面的行动点显示
+    const searchDisplay = document.getElementById('search-action-points');
+    if (searchDisplay) {
+        searchDisplay.textContent = currentActionPoints;
+    }
+
+    // 更新顶部导航栏的行动点显示
+    const headerDisplay = document.getElementById('action-points-display');
+    if (headerDisplay) {
+        headerDisplay.textContent = `行动点: ${currentActionPoints}`;
+    }
 }
 
 // 显示证据详情模态框

@@ -3,7 +3,7 @@ AI God Director - 批量生成剧本的上帝导演
 Generates batch scripts for NPC dialogues with motivation priority system.
 """
 import json
-import google.generativeai as genai
+import requests
 from typing import List, Dict, Any
 from backend.config import config
 from backend.models import (
@@ -16,15 +16,47 @@ class GodDirector:
     """AI God Director for generating batch NPC scripts."""
     
     def __init__(self):
-        """Initialize God Director with Gemini API."""
-        genai.configure(api_key=config.get_gemini_api_key())
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        """Initialize God Director with Gemini REST API."""
+        self.api_key = config.get_gemini_api_key()
+        self.model_name = 'gemini-2.5-flash'
+        self.api_base = 'https://generativelanguage.googleapis.com/v1'
         
         # Load character data
         with open('backend/data/characters.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
             self.characters = {c['id']: Character(**c) for c in data['characters']}
             self.game_info = data['game_info']
+    
+    def _call_gemini_api(self, prompt: str, system_instruction: str = "") -> str:
+        """Call Gemini REST API v1 and return text response."""
+        url = f"{self.api_base}/models/{self.model_name}:generateContent"
+        headers = {'Content-Type': 'application/json'}
+        
+        # Build contents array
+        contents = []
+        if system_instruction:
+            contents.append({"role": "user", "parts": [{"text": system_instruction + "\n\n" + prompt}]})
+        else:
+            contents.append({"role": "user", "parts": [{"text": prompt}]})
+        
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 1.0,
+                "maxOutputTokens": 8192
+            }
+        }
+        
+        response = requests.post(
+            f"{url}?key={self.api_key}",
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        return result['candidates'][0]['content']['parts'][0]['text']
     
     def _build_system_prompt(self) -> str:
         """Build system prompt with all character scripts and motivation rules."""
@@ -243,13 +275,7 @@ class GodDirector:
             
             for attempt in range(max_retries):
                 try:
-                    response = self.model.generate_content(
-                        system_prompt + context_prompt,
-                        generation_config=genai.types.GenerationConfig(
-                            temperature=0.8,
-                            max_output_tokens=2048,
-                        )
-                    )
+                    response_text = self._call_gemini_api(context_prompt, system_prompt)
                     break # Success
                 except Exception as e:
                     if "429" in str(e) or "Quota exceeded" in str(e) or "Resource exhausted" in str(e):
@@ -262,7 +288,7 @@ class GodDirector:
             
             print(f"[regenerate_script] ✅ AI response received")
             
-            response_text = response.text.strip()
+            response_text = response_text.strip()
             print(f"[regenerate_script] Response length: {len(response_text)}")
             print(f"[regenerate_script] Raw response:\n{response_text}\n")
             

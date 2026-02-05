@@ -1,6 +1,7 @@
-def main():
-    print("Hello from test-murder-mystery-game!")
+"""
+Entry point for Render deployment.
+Exposes the FastAPI app from backend.main module.
+"""
+from backend.main import app
 
-
-if __name__ == "__main__":
-    main()
+__all__ = ["app"]
