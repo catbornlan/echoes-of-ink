@@ -1,0 +1,383 @@
+/* 水墨风格特效 - Ink-Wash Aesthetic */
+
+/* 水墨晕染背景 */
+.ink-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg,
+            rgba(245, 245, 240, 1) 0%,
+            rgba(230, 230, 225, 1) 50%,
+            rgba(245, 245, 240, 1) 100%);
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* 水墨纹理效果 */
+.ink-background::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(26, 26, 26, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(26, 26, 26, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(26, 26, 26, 0.04) 0%, transparent 40%);
+    animation: inkFlow 30s ease-in-out infinite;
+}
+
+@keyframes inkFlow {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    33% {
+        transform: translate(5%, -5%) rotate(1deg);
+    }
+
+    66% {
+        transform: translate(-5%, 5%) rotate(-1deg);
+    }
+}
+
+/* 水墨扩散动画（页面切换时） */
+.screen.transitioning {
+    animation: inkSpread 1s ease-out;
+}
+
+@keyframes inkSpread {
+    0% {
+        clip-path: circle(0% at 50% 50%);
+        opacity: 0;
+    }
+
+    100% {
+        clip-path: circle(150% at 50% 50%);
+        opacity: 1;
+    }
+}
+
+/* 黑白剪影角色卡 */
+.character-silhouette {
+    position: relative;
+    overflow: hidden;
+}
+
+.character-silhouette::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle,
+            rgba(26, 26, 26, 0.9) 0%,
+            rgba(26, 26, 26, 1) 70%);
+    filter: blur(2px);
+    transition: all 0.3s ease;
+}
+
+.character-card:hover .character-silhouette::before {
+    filter: blur(0px);
+    background: radial-gradient(circle,
+            rgba(26, 26, 26, 1) 0%,
+            rgba(26, 26, 26, 0.95) 70%);
+}
+
+/* 墨迹边框动画 */
+.character-card.selected::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg,
+            var(--ink-black) 0%,
+            var(--ink-gray) 50%,
+            var(--ink-black) 100%);
+    background-size: 200% 200%;
+    animation: inkBorderFlow 3s ease infinite;
+    z-index: -1;
+}
+
+@keyframes inkBorderFlow {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* 宣纸质感对话气泡 */
+.message-bubble {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    box-shadow:
+        2px 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 0 20px rgba(0, 0, 0, 0.02);
+    border-radius: 2px;
+}
+
+.message-bubble::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.01) 2px,
+            rgba(0, 0, 0, 0.01) 4px);
+    pointer-events: none;
+}
+
+/* 玩家消息的墨色背景 */
+.message.player .message-bubble {
+    background: linear-gradient(135deg,
+            rgba(26, 26, 26, 0.95) 0%,
+            rgba(42, 42, 42, 0.95) 100%);
+    box-shadow:
+        2px 2px 12px rgba(0, 0, 0, 0.3),
+        inset 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+/* 水墨晕染文字效果 */
+.game-title {
+    position: relative;
+    display: inline-block;
+}
+
+.game-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    color: rgba(26, 26, 26, 0.1);
+    filter: blur(3px);
+    z-index: -1;
+}
+
+/* 按钮墨迹效果 */
+.ink-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle,
+            rgba(26, 26, 26, 0.3) 0%,
+            transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+    border-radius: 50%;
+}
+
+.ink-button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* 侧边栏水墨分隔线 */
+.sidebar-tabs::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--ink-black) 20%,
+            var(--ink-black) 80%,
+            transparent 100%);
+}
+
+/* 环节过渡描写的墨迹装饰 */
+.phase-narrative::before {
+    content: '◆';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--ink-black);
+    opacity: 0.3;
+}
+
+/* 滚动条水墨风格 */
+.dialogue-area::-webkit-scrollbar,
+.sidebar-content::-webkit-scrollbar,
+.script-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dialogue-area::-webkit-scrollbar-track,
+.sidebar-content::-webkit-scrollbar-track,
+.script-content::-webkit-scrollbar-track {
+    background: rgba(138, 138, 138, 0.1);
+}
+
+.dialogue-area::-webkit-scrollbar-thumb,
+.sidebar-content::-webkit-scrollbar-thumb,
+.script-content::-webkit-scrollbar-thumb {
+    background: var(--ink-gray);
+    border-radius: 4px;
+}
+
+.dialogue-area::-webkit-scrollbar-thumb:hover,
+.sidebar-content::-webkit-scrollbar-thumb:hover,
+.script-content::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-black);
+}
+
+/* 输入框墨迹聚焦效果 */
+#player-input {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+#player-input:focus {
+    box-shadow:
+        0 0 0 2px var(--ink-black),
+        0 0 20px rgba(26, 26, 26, 0.1);
+}
+
+/* 加载动画水墨效果 */
+.loading-spinner {
+    position: relative;
+}
+
+.loading-spinner::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid rgba(245, 245, 240, 0.2);
+    border-radius: 50%;
+    animation: inkPulse 2s ease-in-out infinite;
+}
+
+@keyframes inkPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+}
+
+/* 真相揭晓的墨迹展开效果 */
+.truth-reveal {
+    position: relative;
+    overflow: hidden;
+}
+
+.truth-reveal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(26, 26, 26, 0.05) 50%,
+            transparent 100%);
+    animation: inkReveal 2s ease-out;
+}
+
+@keyframes inkReveal {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* 投票卡片的墨迹悬停 */
+.location-card::after,
+.character-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+            rgba(26, 26, 26, 0.05) 0%,
+            transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.location-card:hover::after,
+.character-card:hover::after {
+    opacity: 1;
+}
+
+/* 文字淡入动画 */
+.fade-in-text {
+    animation: textFadeIn 1s ease-out;
+}
+
+@keyframes textFadeIn {
+    from {
+        opacity: 0;
+        filter: blur(2px);
+    }
+
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+/* 墨迹飞溅装饰（可选） */
+.ink-splash {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle,
+            rgba(26, 26, 26, 0.1) 0%,
+            transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: splash 1s ease-out forwards;
+}
+
+@keyframes splash {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}

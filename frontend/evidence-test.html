@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>证据标签页测试</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>证据标签页手动测试清单</h1>
+
+    <h2>测试步骤</h2>
+    <ol>
+        <li>打开游戏：<a href="http://localhost:8080/index.html" target="_blank">http://localhost:8080/index.html</a></li>
+        <li>选择角色"小马"并进入游戏</li>
+        <li>按照下面的测试清单逐项验证</li>
+    </ol>
+
+    <h2>测试清单</h2>
+
+    <div id="test-checklist">
+        <div class="test-item">
+            <h3>✅ 测试 1：空状态显示</h3>
+            <p><strong>操作</strong>：在游戏开始后（未搜证前），点击右侧"证据"标签</p>
+            <p><strong>预期结果</strong>：</p>
+            <ul>
+                <li>显示"收集的证据"标题</li>
+                <li>显示"暂无收集的证据"提示（文字显示，不是黑屏）</li>
+                <li>显示"已公开证据"标题</li>
+                <li>显示"暂无公开证据"提示</li>
+            </ul>
+            <button onclick="markTest(1, true)">通过</button>
+            <button onclick="markTest(1, false)">失败</button>
+            <div id="result-1"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>✅ 测试 2：搜证后证据显示</h3>
+            <p><strong>操作</strong>：</p>
+            <ol>
+                <li>进入搜证环节</li>
+                <li>选择一个地点搜证（例如"后山"或"寝室"）</li>
+                <li>收集至少 1 条证据</li>
+                <li>点击"证据"标签</li>
+            </ol>
+            <p><strong>预期结果</strong>：</p>
+            <ul>
+                <li>证据列表显示收集的证据</li>
+                <li>每条证据显示名称（例如："无名墓"、"血迹"等）</li>
+                <li>未公开的证据旁边有"公开"按钮</li>
+            </ul>
+            <button onclick="markTest(2, true)">通过</button>
+            <button onclick="markTest(2, false)">失败</button>
+            <div id="result-2"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>✅ 测试 3：证据公开功能</h3>
+            <p><strong>操作</strong>：在证据列表中点击某个证据的"公开"按钮</p>
+            <p><strong>预期结果</strong>：</p>
+            <ul>
+                <li>该证据显示"✓ 已公开"标记</li>
+                <li>"公开"按钮消失</li>
+                <li>"已公开证据"区域出现该证据</li>
+                <li>显示成功提示toast</li>
+            </ul>
+            <button onclick="mark Test(3, true)">通过</button>
+            <button onclick="markTest(3, false)">失败</button>
+            <div id="result-3"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>✅ 测试 4：证据详情模态框</h3>
+            <p><strong>操作</strong>：点击证据卡片（不是"公开"按钮）</p>
+            <p><strong>预期结果</strong>：</p>
+            <ul>
+                <li>弹出证据详情模态框</li>
+                <li>显示证据名称、来源、内容</li>
+                <li>有关闭按钮</li>
+            </ul>
+            <button onclick="markTest(4, true)">通过</button>
+            <button onclick="markTest(4, false)">失败</button>
+            <div id="result-4"></div>
+        </div>
+    </div>
+
+    <h2>测试结果</h2>
+    <div id="summary"></div>
+    <button onclick="generateReport()">生成测试报告</button>
+
+    <script>
+        const results = {};
+
+        function markTest(testNum, passed) {
+            results[testNum] = passed;
+            const resultDiv = document.getElementById(`result-${testNum}`);
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.textContent = passed ? '✅ 通过' : '❌ 失败';
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const total = Object.keys(results).length;
+            const passed = Object.values(results).filter(r => r).length;
+            const summary = document.getElementById('summary');
+            summary.innerHTML = `<h3>进度：${passed}/${4} 个测试完成</h3>`;
+        }
+
+        function generateReport() {
+            const total = 4;
+            const tested = Object.keys(results).length;
+            const passed = Object.values(results).filter(r => r).length;
+
+            let report = `证据标签页测试报告\n\n`;
+            report += `总测试数：${total}\n`;
+            report += `已测试：${tested}\n`;
+            report += `通过：${passed}\n`;
+            report += `失败：${tested - passed}\n\n`;
+
+            report += `详细结果：\n`;
+            for (let i = 1; i <= 4; i++) {
+                const status = results[i] === true ? '✅ 通过' : results[i] === false ? '❌ 失败' : '⏸️ 未测试';
+                report += `测试 ${i}: ${status}\n`;
+            }
+
+            alert(report);
+            console.log(report);
+        }
+    </script>
+</body>
+
+</html>

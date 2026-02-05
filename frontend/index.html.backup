@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="luxury">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不知境中人 - 谋杀之谜</title>
+
+    <!-- Modern UI Stack -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <!-- Custom overrides -->
+    <style>
+        /* Minimal custom styles only if needed */
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- 开篇界面 -->
+    <div id="opening-screen" class="screen active min-h-screen flex items-center justify-center bg-base-200">
+        <div class="card w-96 bg-base-100 shadow-2xl animate__animated animate__fadeInUp">
+            <div class="card-body items-center text-center">
+                <h1 class="card-title text-4xl font-bold mb-4">不知境中人</h1>
+                <p class="text-lg opacity-70 mb-6">
+                    山中豪宅，百年谜案<br>
+                    神笔点石，画出真相
+                </p>
+                <button id="start-btn" class="btn btn-primary btn-lg">开始游戏</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色选择界面 -->
+    <div id="character-select-screen" class="screen">
+        <div class="ink-background"></div>
+        <div class="content-container">
+            <h2 class="section-title">选择角色</h2>
+            <div id="character-grid" class="character-grid">
+                <!-- 角色卡片将由JS动态生成 -->
+            </div>
+            <button id="random-character-btn" class="ink-button secondary">随机选择</button>
+        </div>
+    </div>
+
+    <!-- 剧本阅读界面 -->
+    <div id="script-reading-screen" class="screen">
+        <div class="ink-background"></div>
+        <div class="content-container">
+            <h2 id="character-name" class="section-title"></h2>
+            <div id="script-content" class="script-content">
+                <!-- 剧本内容将由JS填充 -->
+            </div>
+            <button id="start-game-btn" class="ink-button">进入游戏</button>
+        </div>
+    </div>
+
+    <!-- 游戏主界面 -->
+    <div id="game-main-screen" class="screen">
+        <div class="ink-background"></div>
+
+        <!-- 顶部状态栏 -->
+        <div class="status-bar">
+            <div class="phase-indicator">
+                <span id="current-phase">自我介绍</span>
+            </div>
+            <div class="action-points">
+                <span id="action-points-display">行动点: 0</span>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 对话区域 -->
+            <div class="dialogue-area">
+                <div id="messages-container" class="messages-container">
+                    <!-- 消息将由JS动态添加 -->
+                </div>
+
+                <!-- 环节过渡描写 -->
+                <div id="phase-narrative" class="phase-narrative hidden">
+                    <!-- 过渡描写将由JS填充 -->
+                </div>
+            </div>
+
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="script">剧本</button>
+                    <button class="sidebar-tab" data-tab="evidence">证据</button>
+                    <button class="sidebar-tab" data-tab="history">历史</button>
+                </div>
+
+                <div class="sidebar-content">
+                    <div id="script-tab" class="tab-content active">
+                        <div id="sidebar-script"></div>
+                    </div>
+                    <div id="evidence-tab" class="tab-content">
+                        <div id="collected-evidence-list"></div>
+                        <div id="public-evidence-list"></div>
+                    </div>
+                    <div id="history-tab" class="tab-content">
+                        <div id="dialogue-history"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="input-area">
+            <!-- @提及按钮组 -->
+            <div id="mention-buttons" class="mention-buttons hidden">
+                <!-- 动态生成角色按钮 -->
+            </div>
+            <input type="text" id="player-input" placeholder="输入你的发言..." disabled>
+            <button id="send-btn" class="ink-button" disabled>发送</button>
+            <button id="next-phase-btn" class="ink-button secondary">进入下一环节</button>
+        </div>
+    </div>
+
+    <!-- 搜证界面 -->
+    <div id="search-screen" class="screen">
+        <div class="ink-background"></div>
+        <div class="content-container">
+            <h2 class="section-title">搜证</h2>
+            <div class="search-info">
+                <p>剩余行动点: <span id="search-action-points">4</span></p>
+                <p id="search-round-info">第一轮搜证（不可深度调查）</p>
+            </div>
+            <div id="location-grid" class="location-grid">
+                <!-- 搜证地点将由JS生成 -->
+            </div>
+            <button id="finish-search-btn" class="ink-button">完成搜证</button>
+        </div>
+    </div>
+
+    <!-- 投票界面 -->
+    <div id="vote-screen" class="screen">
+        <div class="ink-background"></div>
+        <div class="content-container">
+            <h2 class="section-title">投票</h2>
+            <p class="vote-instruction">请选择你认为的凶手</p>
+            <div id="vote-character-grid" class="character-grid">
+                <!-- 角色选项将由JS生成 -->
+            </div>
+            <button id="confirm-vote-btn" class="ink-button" disabled>确认投票</button>
+        </div>
+    </div>
+
+    <!-- 真相揭晓界面 -->
+    <div id="reveal-screen" class="screen">
+        <div class="ink-background"></div>
+        <div class="content-container">
+            <h2 class="section-title">真相揭晓</h2>
+            <div id="vote-result" class="vote-result">
+                <!-- 投票结果将由JS填充 -->
+            </div>
+            <div id="ending-epilogue" class="ending-epilogue">
+                <!-- 结局续写将由JS填充 -->
+            </div>
+            <div id="truth-reveal" class="truth-reveal">
+                <!-- 完整真相将由JS填充 -->
+            </div>
+            <button id="restart-btn" class="ink-button">重新开始</button>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading-overlay"
+        class="loading-overlay hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body items-center text-center">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="mt-4 text-lg">AI 导演正在创作剧本...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 证据详情模态框 -->
+    <div id="evidence-modal" class="modal hidden">
+        <div class="modal-content evidence-modal-content">
+            <h3 id="evidence-modal-title">证据详情</h3>
+            <div id="evidence-modal-body">
+                <p><strong>来源：</strong><span id="evidence-source"></span></p>
+                <p><strong>证据内容：</strong></p>
+                <p id="evidence-content" style="margin: 16px 0; line-height: 1.8;"></p>
+                <p id="evidence-deep-info" class="hidden" style="color: var(--subtle-red); font-style: italic;">💡
+                    此证据支持深度调查</p>
+            </div>
+            <div class="modal-actions">
+                <button id="close-evidence-btn" class="ink-button">关闭</button>
+                <button id="public-evidence-btn" class="ink-button-primary hidden">公开证据</button>
+                <span id="evidence-public-status" class="hidden" style="color: var(--medium-gray);">✓ 已公开</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript引用 -->
+    <script src="js/game-state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/input-helpers.js"></script>
+    <script src="js/app.js"></script>
+    <!-- Automated testing script (comment out for production) -->
+    <!-- <script src="js/automated-test.js"></script> -->
+</body>
+
+</html>

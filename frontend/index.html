@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="luxury">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不知境中人 - 谋杀之谜</title>
+
+    <!-- Modern UI Stack -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- Vintage Detective Theme -->
+    <link rel="stylesheet" href="css/vintage-detective.css">
+</head>
+
+<body>
+
+    <!-- 进度条已移除 -->
+
+    <!-- 阶段0: 欢迎封面 -->
+    <div id="phase-welcome"
+        class="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral to-base-300">
+        <div class="text-center space-y-8 animate__animated animate__fadeIn">
+            <h1 class="text-6xl font-bold text-primary mb-4">不知境中人</h1>
+            <p class="text-2xl opacity-70">山中豪宅，百年谜案<br>神笔点石，画出真相</p>
+            <button id="btn-start-game" class="btn btn-primary btn-lg mt-8 px-12">开始游戏</button>
+        </div>
+    </div>
+
+    <!-- 阶段1: 选择角色 -->
+    <div id="phase-select-char" class="hidden min-h-screen p-8">
+        <div class="container mx-auto max-w-6xl">
+            <h2 class="text-4xl font-bold text-center mb-8">选择你的角色</h2>
+            <div id="character-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+            <div class="flex justify-center gap-4">
+                <button id="random-character-btn" class="btn btn-outline btn-lg">随机选择</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 阶段2: 阅读剧本 -->
+    <div id="phase-read-script" class="hidden min-h-screen p-8">
+        <div class="container mx-auto max-w-4xl">
+            <div class="card bg-base-100 shadow-2xl">
+                <div class="card-body">
+                    <h2 id="character-name-title" class="card-title text-3xl mb-6">您的角色</h2>
+                    <div id="script-content" class="prose prose-lg max-w-none mb-8"></div>
+                    <div class="card-actions justify-end">
+                        <button id="btn-enter-game" class="btn btn-primary btn-lg">进入游戏</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 阶段3: 主游戏界面 -->
+    <div id="phase-game-main" class="hidden min-h-screen">
+        <div class="navbar bg-base-100 shadow-lg">
+            <div class="flex-1">
+                <span id="current-phase" class="text-xl font-semibold px-4">游戏进行中</span>
+            </div>
+            <div class="flex-none">
+                <span id="action-points-display" class="badge badge-lg badge-primary mr-4">行动点: 0</span>
+            </div>
+        </div>
+
+        <div class="flex h-[calc(100vh-64px)]">
+            <div class="flex-1 flex flex-col relative">
+                <!-- 环节过渡文字遮罩 -->
+                <div id="phase-narrative"
+                    class="hidden absolute inset-0 z-10 bg-black/80 flex items-center justify-center p-12 text-center text-white text-2xl animate__animated animate__fadeIn">
+                </div>
+
+                <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+
+                <div class="bg-base-100 p-4 border-t border-base-300">
+                    <div id="mention-buttons" class="hidden flex flex-wrap gap-2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="player-input" placeholder="输入你的发言…" class="input input-bordered flex-1"
+                            autocomplete="off" spellcheck="false" disabled>
+                        <button id="send-btn" class="btn btn-primary" disabled>发送</button>
+                        <button id="next-phase-btn" class="btn btn-secondary">进入下一环节</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-96 bg-base-100 border-l border-base-300 flex flex-col">
+
+                <div class="w-96 bg-base-100 border-l border-base-300 flex flex-col">
+                    <div class="tabs tabs-boxed bg-base-200">
+                        <a class="tab tab-active sidebar-tab" data-tab="script">剧本</a>
+                        <a class="tab sidebar-tab" data-tab="evidence">证据</a>
+                        <a class="tab sidebar-tab" data-tab="history">历史</a>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <div id="script-tab" class="tab-content active">
+                            <div id="sidebar-script"></div>
+                        </div>
+                        <div id="evidence-tab" class="tab-content hidden space-y-4">
+                            <div id="collected-evidence-list"></div>
+                            <div class="divider"></div>
+                            <div id="public-evidence-list"></div>
+                        </div>
+                        <div id="history-tab" class="tab-content hidden">
+                            <div id="sidebar-history"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 阶段4: 搜证界面 -->
+        <div id="phase-search" class="hidden min-h-screen p-8">
+            <div class="container mx-auto max-w-6xl">
+                <div class="card bg-base-100 shadow-xl mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title text-2xl">搜证环节</h2>
+                        <div class="stats shadow">
+                            <div class="stat">
+                                <div class="stat-title">当前轮次</div>
+                                <div class="stat-value text-primary text-2xl" id="search-round-info">第一轮</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">剩余行动点</div>
+                                <div class="stat-value text-secondary text-2xl" id="search-action-points">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="location-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+
+                <div class="flex justify-center">
+                    <button id="finish-search-btn" class="btn btn-primary btn-lg">完成搜证</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 阶段5: 投票界面 -->
+        <div id="phase-vote" class="hidden min-h-screen p-8">
+            <div class="container mx-auto max-w-4xl">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-3xl mb-4">指认凶手</h2>
+                        <p class="text-lg opacity-70 mb-6">请选择你认为的凶手</p>
+                        <div id="suspect-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"></div>
+                        <div class="card-actions justify-end">
+                            <button id="submit-vote-btn" class="btn btn-primary btn-lg" disabled>提交指认</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 阶段6: 投票结果 -->
+        <div id="phase-vote-result" class="hidden min-h-screen p-8">
+            <div class="container mx-auto max-w-4xl">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-3xl mb-4">投票结果</h2>
+                        <div id="vote-result" class="prose max-w-none"></div>
+                        <div class="card-actions justify-end mt-6">
+                            <button id="reveal-truth-btn" class="btn btn-primary btn-lg">揭晓真相</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 阶段7: 真相揭晓 -->
+        <div id="phase-truth-reveal" class="hidden min-h-screen p-8">
+            <div class="container mx-auto max-w-4xl">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-3xl mb-4">真相揭晓</h2>
+                        <div id="ending-epilogue" class="prose max-w-none mb-6"></div>
+                        <div class="divider">完整真相</div>
+                        <div id="truth-reveal" class="prose max-w-none"></div>
+                        <div class="card-actions justify-end mt-6">
+                            <button id="restart-btn" class="btn btn-primary btn-lg">重新开始</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay"
+            class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+            <div class="bg-base-100 p-8 rounded-lg shadow-2xl text-center max-w-md"
+                style="border: 2px solid var(--accent-red);">
+                <div class="loading loading-spinner loading-lg text-accent-red mb-4"></div>
+                <h3 id="loading-title" class="text-2xl font-bold mb-3" style="color: var(--accent-red);">游戏进行中</h3>
+                <p id="loading-description" class="text-base-content opacity-80" style="line-height: 1.6;">请稍候…</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Modal -->
+    <div id="evidence-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="evidence-modal-title" class="font-bold text-lg mb-4">证据详情</h3>
+            <div id="evidence-modal-body">
+                <p class="mb-2"><strong>来源：</strong><span id="evidence-source"></span></p>
+                <p class="mb-2"><strong>证据内容：</strong></p>
+                <p id="evidence-content" class="py-4"></p>
+                <div id="evidence-deep-info" class="hidden alert alert-info mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        class="stroke-current shrink-0 w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>此证据支持深度调查</span>
+                </div>
+            </div>
+            <div class="modal-action">
+                <button id="close-evidence-btn" class="btn">关闭</button>
+                <button id="public-evidence-btn" class="btn btn-primary hidden">公开证据</button>
+                <span id="evidence-public-status" class="hidden badge badge-success badge-lg">✓ 已公开</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/phase-control.js"></script>
+    <script src="js/game-state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/input-control.js"></script>
+    <script src="js/input-helpers.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

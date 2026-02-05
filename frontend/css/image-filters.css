@@ -1,0 +1,15 @@
+/* 通用图片水墨效果 */
+img,
+[style*="background-image"] {
+    filter: grayscale(100%) contrast(120%) brightness(110%);
+    mix-blend-mode: multiply;
+}
+
+/* 确保所有背景图片都有水墨效果 */
+.character-silhouette,
+.landscape-bg,
+.ink-background,
+.character-card,
+.location-card {
+    background-color: var(--rice-paper);
+}

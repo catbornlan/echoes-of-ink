@@ -1,0 +1,502 @@
+/* 主样式文件 - 基础布局和组件 */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --ink-black: #1a1a1a;
+    --ink-gray: #4a4a4a;
+    --ink-light: #8a8a8a;
+    --paper-white: #f5f5f0;
+    --accent-ink: #2d2d2d;
+    --shadow-ink: rgba(0, 0, 0, 0.3);
+}
+
+body {
+    font-family: 'STSong', 'Songti SC', 'SimSun', serif;
+    background: var(--paper-white);
+    color: var(--ink-black);
+    line-height: 1.8;
+    overflow: hidden;
+}
+
+/* 屏幕管理 */
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+.content-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* 标题样式 */
+.game-title {
+    font-size: 4rem;
+    font-weight: 300;
+    letter-spacing: 0.5rem;
+    margin-bottom: 2rem;
+    color: var(--ink-black);
+    text-shadow: 2px 2px 4px var(--shadow-ink);
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 300;
+    letter-spacing: 0.3rem;
+    margin-bottom: 2rem;
+    color: var(--ink-black);
+}
+
+/* 故事介绍 */
+.story-intro {
+    max-width: 600px;
+    text-align: center;
+    margin-bottom: 3rem;
+    font-size: 1.2rem;
+    line-height: 2;
+    color: var(--ink-gray);
+}
+
+.story-intro p {
+    margin-bottom: 1rem;
+}
+
+/* 按钮样式 */
+.ink-button {
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    font-family: inherit;
+    background: var(--ink-black);
+    color: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ink-button:hover {
+    background: transparent;
+    color: var(--ink-black);
+}
+
+.ink-button.secondary {
+    background: transparent;
+    color: var(--ink-black);
+    border: 2px solid var(--ink-gray);
+}
+
+.ink-button.secondary:hover {
+    background: var(--ink-gray);
+    color: var(--paper-white);
+    border-color: var(--ink-gray);
+}
+
+.ink-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 角色网格 */
+.character-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 900px;
+}
+
+.character-card {
+    background: var(--paper-white);
+    border: 2px solid var(--ink-light);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.character-card:hover {
+    border-color: var(--ink-black);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px var(--shadow-ink);
+}
+
+.character-card.selected {
+    border-color: var(--ink-black);
+    background: var(--ink-black);
+    color: var(--paper-white);
+}
+
+.character-silhouette {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px;
+    background: var(--ink-black);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--paper-white);
+}
+
+.character-name {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 5px;
+    letter-spacing: 0.2rem;
+}
+
+.character-role {
+    font-size: 1rem;
+    color: var(--ink-light);
+}
+
+/* 剧本内容 */
+.script-content {
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 40px;
+    border: 1px solid var(--ink-light);
+    margin-bottom: 2rem;
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 2;
+    font-size: 1.1rem;
+}
+
+.script-content p {
+    margin-bottom: 1.5rem;
+    text-indent: 2em;
+}
+
+/* 游戏主界面布局 */
+#game-main-screen {
+    flex-direction: column;
+    padding: 0;
+}
+
+.status-bar {
+    width: 100%;
+    background: var(--ink-black);
+    color: var(--paper-white);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.phase-indicator {
+    font-size: 1.2rem;
+    letter-spacing: 0.2rem;
+}
+
+.action-points {
+    font-size: 1.1rem;
+}
+
+.main-content {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    overflow: hidden;
+}
+
+.dialogue-area {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background: rgba(245, 245, 240, 0.9);
+}
+
+.messages-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 消息气泡 */
+.message {
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.player {
+    text-align: right;
+}
+
+.message-speaker {
+    font-size: 0.9rem;
+    color: var(--ink-light);
+    margin-bottom: 5px;
+}
+
+.message-bubble {
+    display: inline-block;
+    max-width: 70%;
+    padding: 15px 20px;
+    background: white;
+    border: 1px solid var(--ink-light);
+    position: relative;
+}
+
+.message.player .message-bubble {
+    background: var(--ink-black);
+    color: var(--paper-white);
+    border-color: var(--ink-black);
+}
+
+.message-action {
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* 环节过渡描写 */
+.phase-narrative {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+    background: rgba(42, 42, 42, 0.05);
+    border-left: 4px solid var(--ink-black);
+    font-size: 1.1rem;
+    line-height: 2;
+    color: var(--ink-gray);
+    animation: fadeIn 1s ease;
+}
+
+.phase-narrative.hidden {
+    display: none;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 350px;
+    background: white;
+    border-left: 2px solid var(--ink-light);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--ink-light);
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 15px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--ink-gray);
+    transition: all 0.3s ease;
+}
+
+.sidebar-tab.active {
+    background: var(--ink-black);
+    color: var(--paper-white);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 输入区域 */
+.input-area {
+    width: 100%;
+    padding: 20px 30px;
+    background: white;
+    border-top: 2px solid var(--ink-light);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+#player-input {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid var(--ink-light);
+    background: var(--paper-white);
+    color: var(--ink-black);
+}
+
+#player-input:focus {
+    outline: none;
+    border-color: var(--ink-black);
+}
+
+/* 搜证界面 */
+.search-info {
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.location-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 2rem;
+}
+
+.location-card {
+    padding: 30px;
+    border: 2px solid var(--ink-light);
+    background: var(--paper-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.location-card:hover {
+    border-color: var(--ink-black);
+    transform: translateY(-3px);
+}
+
+.location-name {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 0.2rem;
+}
+
+.location-description {
+    font-size: 1rem;
+    color: var(--ink-gray);
+}
+
+/* 投票界面 */
+.vote-instruction {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--ink-gray);
+}
+
+/* 真相揭晓 */
+.vote-result, .ending-epilogue, .truth-reveal {
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    border: 1px solid var(--ink-light);
+    margin-bottom: 2rem;
+    line-height: 2;
+    font-size: 1.1rem;
+}
+
+.vote-result h3, .ending-epilogue h3, .truth-reveal h3 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    letter-spacing: 0.2rem;
+}
+
+/* 加载提示 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--ink-light);
+    border-top-color: var(--paper-white);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    color: var(--paper-white);
+    margin-top: 20px;
+    font-size: 1.2rem;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .character-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .location-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        display: none;
+    }
+}

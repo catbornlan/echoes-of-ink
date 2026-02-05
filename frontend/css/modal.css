@@ -1,0 +1,83 @@
+/* 模态框样式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 26, 26, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--rice-paper);
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow:
+        inset 0 0 0 3px var(--charcoal),
+        0 8px 32px rgba(26, 26, 26, 0.4);
+    position: relative;
+}
+
+.evidence-modal-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 24px;
+    color: var(--deep-ink);
+    font-family: var(--font-title);
+}
+
+.evidence-modal-content p {
+    margin: 12px 0;
+    line-height: 1.8;
+    color: var(--charcoal);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    align-items: center;
+}
+
+.ink-button,
+.ink-button-primary {
+    padding: 12px 28px;
+    font-size: 1rem;
+    border: 2px solid var(--charcoal);
+    background: transparent;
+    color: var(--deep-ink);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.ink-button:hover {
+    background: var(--faint-ink);
+}
+
+.ink-button-primary {
+    background: var(--charcoal);
+    color: var(--rice-paper);
+}
+
+.ink-button-primary:hover {
+    background: var(--deep-ink);
+    border-color: var(--deep-ink);
+}
+
+.ink-button-primary.hidden,
+.hidden {
+    display: none !important;
+}

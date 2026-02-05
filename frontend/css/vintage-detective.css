@@ -1,0 +1,335 @@
+/* 复古侦探风格 - Vintage Detective Theme */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Special+Elite&family=Courier+Prime&display=swap');
+
+/* 全局变量 */
+:root {
+    --paper-beige: #f4f1e8;
+    --dark-sepia: #3e2723;
+    --charcoal: #4a4a4a;
+    --aged-white: #faf8f3;
+    --shadow-soft: rgba(62, 39, 35, 0.15);
+    --shadow-deep: rgba(62, 39, 35, 0.3);
+}
+
+/* 全局背景 - 泛黄纸张纹理 */
+body {
+    background-color: var(--paper-beige);
+    background-image:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, .03) 2px,
+            rgba(0, 0, 0, .03) 4px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, .03) 2px,
+            rgba(0, 0, 0, .03) 4px);
+    font-family: 'Courier Prime', monospace;
+    color: var(--dark-sepia);
+    position: relative;
+}
+
+/* 台灯光照效果遮罩 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center,
+            transparent 0%,
+            transparent 40%,
+            rgba(0, 0, 0, 0.15) 70%,
+            rgba(0, 0, 0, 0.3) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* 所有内容容器高于光照遮罩 */
+body>* {
+    position: relative;
+    z-index: 2;
+}
+
+/* 标题字体 */
+h1,
+h2,
+h3,
+.card-title {
+    font-family: 'Merriweather', serif;
+    color: var(--dark-sepia);
+}
+
+/* 纸张卡片效果 */
+.card {
+    background: var(--aged-white);
+    border: none;
+    box-shadow:
+        0 2px 4px var(--shadow-soft),
+        0 8px 16px var(--shadow-deep),
+        inset 0 0 60px rgba(62, 39, 35, 0.02);
+    border-radius: 2px;
+    position: relative;
+}
+
+/* 纸张边缘微翘效果 */
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(0, 0, 0, 0.05) 0%,
+            transparent 10%,
+            transparent 90%,
+            rgba(0, 0, 0, 0.05) 100%);
+    pointer-events: none;
+    border-radius: 2px;
+}
+
+.card-body {
+    background: transparent;
+}
+
+/* 拍立得照片效果 */
+.character-photo,
+.card figure img {
+    border: 8px solid #fff;
+    box-shadow:
+        0 2px 8px var(--shadow-soft),
+        0 4px 16px var(--shadow-deep);
+    border-bottom-width: 48px;
+    background: #fff;
+}
+
+/* 旧式印章按钮 */
+.btn {
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: var(--dark-sepia);
+    color: var(--aged-white);
+    border: 3px solid var(--dark-sepia);
+    border-radius: 4px;
+    box-shadow:
+        0 2px 4px var(--shadow-soft),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    position: relative;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(45deg,
+            transparent,
+            transparent 10px,
+            rgba(255, 255, 255, 0.05) 10px,
+            rgba(255, 255, 255, 0.05) 20px);
+    pointer-events: none;
+}
+
+.btn:hover {
+    background: #5d4037;
+    border-color: #5d4037;
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 8px var(--shadow-soft),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--dark-sepia);
+    border: 3px solid var(--dark-sepia);
+}
+
+.btn-outline:hover {
+    background: var(--dark-sepia);
+    color: var(--aged-white);
+}
+
+/* 磨损感分割线 */
+.divider {
+    border-top: 2px dashed var(--charcoal);
+    opacity: 0.3;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: repeating-linear-gradient(90deg,
+            transparent,
+            transparent 5px,
+            var(--charcoal) 5px,
+            var(--charcoal) 10px);
+    opacity: 0.2;
+}
+
+/* 档案袋样式卡片 */
+.location-card,
+.character-card {
+    background: linear-gradient(to bottom,
+            #e8e3d6 0%,
+            #f5f2e8 50%,
+            #e8e3d6 100%);
+    border: 1px solid rgba(62, 39, 35, 0.2);
+    box-shadow:
+        2px 2px 8px var(--shadow-soft),
+        -1px -1px 4px rgba(255, 255, 255, 0.5),
+        inset 0 0 40px rgba(0, 0, 0, 0.03);
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.location-card::after,
+.character-card::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle,
+            rgba(139, 69, 19, 0.3) 0%,
+            transparent 70%);
+}
+
+.location-card:hover,
+.character-card:hover {
+    transform: translateY(-4px) rotate(0.5deg);
+    box-shadow:
+        4px 8px 16px var(--shadow-deep),
+        -2px -2px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* 进度条 - 老式文件夹标签 */
+.steps .step {
+    font-family: 'Special Elite', monospace;
+    color: var(--charcoal);
+    background: #d4cfc0;
+    border: 1px solid rgba(62, 39, 35, 0.2);
+}
+
+.steps .step-primary {
+    background: var(--dark-sepia);
+    color: var(--aged-white);
+    font-weight: bold;
+}
+
+/* 输入框 - 打字机纸张 */
+.input {
+    background: #fff;
+    border: 2px solid var(--charcoal);
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: 'Special Elite', monospace;
+    color: var(--dark-sepia);
+}
+
+.input:focus {
+    outline: none;
+    box-shadow:
+        inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+        0 0 0 3px rgba(62, 39, 35, 0.2);
+}
+
+/* Stats组件 - 证据标签 */
+.stat {
+    background: rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(62, 39, 35, 0.15);
+    font-family: 'Courier Prime', monospace;
+}
+
+.stat-title {
+    color: var(--charcoal);
+    font-family: 'Special Elite', monospace;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    color: var(--dark-sepia);
+    font-family: 'Merriweather', serif;
+}
+
+/* Modal - 档案盒 */
+.modal-box {
+    background: var(--aged-white);
+    border: 3px solid var(--dark-sepia);
+    box-shadow:
+        0 8px 32px var(--shadow-deep),
+        inset 0 0 60px rgba(62, 39, 35, 0.02);
+}
+
+/* Loading overlay - 老式相机快门 */
+#loading-overlay .card {
+    border: 4px solid var(--dark-sepia);
+    background: var(--aged-white);
+}
+
+/* Navbar - 木质桌面感 */
+.navbar {
+    background: linear-gradient(to bottom,
+            #8b7355 0%,
+            #6b5444 100%);
+    border-bottom: 3px solid var(--dark-sepia);
+    box-shadow: 0 4px 12px var(--shadow-deep);
+    color: var(--aged-white);
+}
+
+/* Prose内容 - 手写笔记风格 */
+.prose {
+    font-family: 'Courier Prime', monospace;
+    color: var(--dark-sepia);
+    line-height: 1.8;
+}
+
+.prose strong {
+    color: var(--dark-sepia);
+    font-weight: 700;
+}
+
+/* 欢迎页面特殊处理 */
+#phase-welcome {
+    background:
+        radial-gradient(ellipse at center,
+            rgba(244, 241, 232, 0.9) 0%,
+            rgba(139, 69, 19, 0.1) 100%),
+        repeating-linear-gradient(45deg,
+            transparent,
+            transparent 10px,
+            rgba(0, 0, 0, 0.02) 10px,
+            rgba(0, 0, 0, 0.02) 20px),
+        var(--paper-beige);
+}
+
+#phase-welcome h1 {
+    font-size: 4rem;
+    text-shadow:
+        2px 2px 4px var(--shadow-soft),
+        0 0 20px rgba(139, 69, 19, 0.3);
+    color: var(--dark-sepia);
+}
+
+/* 隐藏类保留 */
+.hidden {
+    display: none !important;
+}

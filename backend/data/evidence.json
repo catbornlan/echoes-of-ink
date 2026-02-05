@@ -1,0 +1,624 @@
+{
+    "locations": [
+        {
+            "id": "houshan",
+            "name": "后山",
+            "description": "山后荒僻之地，杂草丛生"
+        },
+        {
+            "id": "qinshi",
+            "name": "寝室",
+            "description": "马良的寝室，案发现场"
+        },
+        {
+            "id": "shufang",
+            "name": "书房",
+            "description": "马良作画的书房"
+        },
+        {
+            "id": "xuemingyi",
+            "name": "薛名医",
+            "description": "搜查薛名医"
+        },
+        {
+            "id": "xingerhua",
+            "name": "杏儿花",
+            "description": "搜查杏儿花"
+        },
+        {
+            "id": "lisi",
+            "name": "李四",
+            "description": "搜查李四"
+        },
+        {
+            "id": "xiaxiangu",
+            "name": "夏仙姑",
+            "description": "搜查夏仙姑"
+        },
+        {
+            "id": "wuxingque",
+            "name": "吴行阙",
+            "description": "搜查吴行阙"
+        },
+        {
+            "id": "xiaoma",
+            "name": "小马",
+            "description": "搜查小马"
+        },
+        {
+            "id": "shiti",
+            "name": "尸体",
+            "description": "检查马良的尸体"
+        }
+    ],
+    "evidence": [
+        {
+            "id": "houshan_1",
+            "location": "houshan",
+            "sequence": 1,
+            "label": "无名墓",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[无名墓] 可以深入调查",
+            "deep_investigation_cost": 2
+        },
+        {
+            "id": "houshan_2",
+            "location": "houshan",
+            "sequence": 2,
+            "label": "葫芦玉佩",
+            "is_deep": true,
+            "parent_id": "houshan_1",
+            "action_cost": 0,
+            "content": "[葫芦玉佩] 女尸旁的翠绿精致葫芦玉佩"
+        },
+        {
+            "id": "houshan_3",
+            "location": "houshan",
+            "sequence": 3,
+            "label": "女尸",
+            "is_deep": true,
+            "parent_id": "houshan_1",
+            "action_cost": 0,
+            "content": "[女尸] 无名墓中多年女尸，已化白骨"
+        },
+        {
+            "id": "houshan_4",
+            "location": "houshan",
+            "sequence": 4,
+            "label": "枯井",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[枯井] 可以深入调查",
+            "deep_investigation_cost": 4
+        },
+        {
+            "id": "houshan_5",
+            "location": "houshan",
+            "sequence": 5,
+            "label": "脚铃",
+            "is_deep": true,
+            "parent_id": "houshan_4",
+            "action_cost": 0,
+            "content": "[脚铃] 枯井男尸旁有脚铃"
+        },
+        {
+            "id": "houshan_6",
+            "location": "houshan",
+            "sequence": 6,
+            "label": "男尸",
+            "is_deep": true,
+            "parent_id": "houshan_4",
+            "action_cost": 0,
+            "content": "[男尸] 枯井男尸已死多年，化为白骨"
+        },
+        {
+            "id": "houshan_7",
+            "location": "houshan",
+            "sequence": 7,
+            "label": "纸钱",
+            "is_deep": true,
+            "parent_id": "houshan_4",
+            "action_cost": 0,
+            "content": "[纸钱] 枯井附近有烧纸钱痕迹"
+        },
+        {
+            "id": "houshan_8",
+            "location": "houshan",
+            "sequence": 8,
+            "label": "石条",
+            "is_deep": true,
+            "parent_id": "houshan_4",
+            "action_cost": 0,
+            "content": "[石条] 枯井附近散落条状石头"
+        },
+        {
+            "id": "qinshi_1",
+            "location": "qinshi",
+            "sequence": 1,
+            "label": "血迹",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[血迹] 血迹从屋中央被拖到床底，尸体在床底"
+        },
+        {
+            "id": "qinshi_2",
+            "location": "qinshi",
+            "sequence": 2,
+            "label": "纸篓",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[纸篓] 可以深入调查",
+            "deep_investigation_cost": 1
+        },
+        {
+            "id": "qinshi_3",
+            "location": "qinshi",
+            "sequence": 3,
+            "label": "画作",
+            "is_deep": true,
+            "parent_id": "qinshi_2",
+            "action_cost": 0,
+            "content": "[画作] 纸篓里是一张空白的画作，时间1528年"
+        },
+        {
+            "id": "qinshi_4",
+            "location": "qinshi",
+            "sequence": 4,
+            "label": "信件",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[信件] 可以深入调查",
+            "deep_investigation_cost": 2
+        },
+        {
+            "id": "qinshi_5",
+            "location": "qinshi",
+            "sequence": 5,
+            "label": "信件一",
+            "is_deep": true,
+            "parent_id": "qinshi_4",
+            "action_cost": 0,
+            "content": "[信件一] 来自杏儿花：儿子还好吗？你可以给我一些钱么，家里太难了"
+        },
+        {
+            "id": "qinshi_6",
+            "location": "qinshi",
+            "sequence": 6,
+            "label": "信件二",
+            "is_deep": true,
+            "parent_id": "qinshi_4",
+            "action_cost": 0,
+            "content": "[信件二] 来自薛名医：求你为我画她，这是我唯一的希望"
+        },
+        {
+            "id": "qinshi_7",
+            "location": "qinshi",
+            "sequence": 7,
+            "label": "烛台",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[烛台] 烛台有点掉漆，底部有血迹"
+        },
+        {
+            "id": "xuemingyi_1",
+            "location": "xuemingyi",
+            "sequence": 1,
+            "label": "传言一",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传言一] 薛夫人最近去世了"
+        },
+        {
+            "id": "xuemingyi_2",
+            "location": "xuemingyi",
+            "sequence": 2,
+            "label": "舒魂散",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[舒魂散] 镇痛药，成瘾性。第一次服用会在3小时后犯药瘾，量多会在4小时后致死"
+        },
+        {
+            "id": "xuemingyi_3",
+            "location": "xuemingyi",
+            "sequence": 3,
+            "label": "画像",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[画像] 薛名医妻子的画像"
+        },
+        {
+            "id": "xuemingyi_4",
+            "location": "xuemingyi",
+            "sequence": 4,
+            "label": "传言二",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传言二] 李四最近在坊间买了纸钱"
+        },
+        {
+            "id": "xuemingyi_5",
+            "location": "xuemingyi",
+            "sequence": 5,
+            "label": "传言三",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传言三] 薛名医最近几乎不出诊，成日浑浑噩噩"
+        },
+        {
+            "id": "xingerhua_1",
+            "location": "xingerhua",
+            "sequence": 1,
+            "label": "葫芦玉佩",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[葫芦玉佩] 随身携带一个翠绿的葫芦玉佩，镌刻得十分精致"
+        },
+        {
+            "id": "xingerhua_2",
+            "location": "xingerhua",
+            "sequence": 2,
+            "label": "传闻一",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传闻一] 杏儿花近年家道中落，娘家和夫家都十分落魄"
+        },
+        {
+            "id": "xingerhua_3",
+            "location": "xingerhua",
+            "sequence": 3,
+            "label": "小金条",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[小金条] 几块金条，呈小长条状"
+        },
+        {
+            "id": "xingerhua_4",
+            "location": "xingerhua",
+            "sequence": 4,
+            "label": "匕首",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[匕首] 枕头下藏着一把匕首"
+        },
+        {
+            "id": "lisi_1",
+            "location": "lisi",
+            "sequence": 1,
+            "label": "镣铐",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[镣铐] 常年戴着镣铐，现在居然解开了"
+        },
+        {
+            "id": "lisi_2",
+            "location": "lisi",
+            "sequence": 2,
+            "label": "日记",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[日记] 可以深入调查",
+            "deep_investigation_cost": 2
+        },
+        {
+            "id": "lisi_3",
+            "location": "lisi",
+            "sequence": 3,
+            "label": "日记一",
+            "is_deep": true,
+            "parent_id": "lisi_2",
+            "action_cost": 0,
+            "content": "[日记一] 我心爱的夏仙姑，怎样才能向你表达爱意？"
+        },
+        {
+            "id": "lisi_4",
+            "location": "lisi",
+            "sequence": 4,
+            "label": "日记二",
+            "is_deep": true,
+            "parent_id": "lisi_2",
+            "action_cost": 0,
+            "content": "[日记二] 张三到底去哪里了？我要调查清楚"
+        },
+        {
+            "id": "lisi_5",
+            "location": "lisi",
+            "sequence": 5,
+            "label": "传闻一",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传闻一] 李四最近在坊间买了把匕首"
+        },
+        {
+            "id": "shufang_1",
+            "location": "shufang",
+            "sequence": 1,
+            "label": "煎药",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[煎药] 一直熬制的煎药，几乎喝完了，只剩下一些药渣"
+        },
+        {
+            "id": "shufang_2",
+            "location": "shufang",
+            "sequence": 2,
+            "label": "酒",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[酒] 一壶烈酒，喝了过半，旁边有两个酒杯"
+        },
+        {
+            "id": "shufang_3",
+            "location": "shufang",
+            "sequence": 3,
+            "label": "暗格",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[暗格] 可以深入调查",
+            "deep_investigation_cost": 3
+        },
+        {
+            "id": "shufang_4",
+            "location": "shufang",
+            "sequence": 4,
+            "label": "画作三",
+            "is_deep": true,
+            "parent_id": "shufang_3",
+            "action_cost": 0,
+            "content": "[画作三] 空白，时间1528年"
+        },
+        {
+            "id": "shufang_5",
+            "location": "shufang",
+            "sequence": 5,
+            "label": "画作二",
+            "is_deep": true,
+            "parent_id": "shufang_3",
+            "action_cost": 0,
+            "content": "[画作二] 画了个荷花潭，花没有茎，画中留白，时间1544年"
+        },
+        {
+            "id": "shufang_6",
+            "location": "shufang",
+            "sequence": 6,
+            "label": "画作一",
+            "is_deep": true,
+            "parent_id": "shufang_3",
+            "action_cost": 0,
+            "content": "[画作一] 画中有3人，1个奴隶主鞭笞2个工人"
+        },
+        {
+            "id": "shufang_7",
+            "location": "shufang",
+            "sequence": 7,
+            "label": "画作",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[画作] 很多画，但是都画得不完整，不是鸟少了翅膀，就是鱼少了眼"
+        },
+        {
+            "id": "shufang_8",
+            "location": "shufang",
+            "sequence": 8,
+            "label": "笔记",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[笔记] 可以深入调查",
+            "deep_investigation_cost": 3
+        },
+        {
+            "id": "shufang_9",
+            "location": "shufang",
+            "sequence": 9,
+            "label": "笔记三",
+            "is_deep": true,
+            "parent_id": "shufang_8",
+            "action_cost": 0,
+            "content": "[笔记三] 不对，画出来的人，会拥有画中的记忆"
+        },
+        {
+            "id": "shufang_10",
+            "location": "shufang",
+            "sequence": 10,
+            "label": "笔记二",
+            "is_deep": true,
+            "parent_id": "shufang_8",
+            "action_cost": 0,
+            "content": "[笔记二] 画出来的人，竟然没有记忆吗？为什么？"
+        },
+        {
+            "id": "shufang_11",
+            "location": "shufang",
+            "sequence": 11,
+            "label": "笔记一",
+            "is_deep": true,
+            "parent_id": "shufang_8",
+            "action_cost": 0,
+            "content": "[笔记一] 看来，画需要画得完整才能成真呢"
+        },
+        {
+            "id": "shiti_1",
+            "location": "shiti",
+            "sequence": 1,
+            "label": "死状",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[死状] 头部有钝器砸伤的痕迹"
+        },
+        {
+            "id": "shiti_2",
+            "location": "shiti",
+            "sequence": 2,
+            "label": "死状",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[死状] 右手手指被切下，双目被扎烂"
+        },
+        {
+            "id": "shiti_3",
+            "location": "shiti",
+            "sequence": 3,
+            "label": "死状",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[死状] 心脏被锐器刺穿"
+        },
+        {
+            "id": "xiaxiangu_1",
+            "location": "xiaxiangu",
+            "sequence": 1,
+            "label": "跛足",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[跛足] 夏仙姑一直是个跛足，现在居然正常了"
+        },
+        {
+            "id": "xiaxiangu_2",
+            "location": "xiaxiangu",
+            "sequence": 2,
+            "label": "酒味",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[酒味] 身上有股酒味"
+        },
+        {
+            "id": "xiaxiangu_3",
+            "location": "xiaxiangu",
+            "sequence": 3,
+            "label": "画作",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[画作] 屋子里有很多画作，画得都很一般"
+        },
+        {
+            "id": "xiaxiangu_4",
+            "location": "xiaxiangu",
+            "sequence": 4,
+            "label": "一支笔",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[一支笔] 一支看起来很精致但是有点年代的画笔"
+        },
+        {
+            "id": "xiaxiangu_5",
+            "location": "xiaxiangu",
+            "sequence": 5,
+            "label": "金条",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[金条] 一块不是很规整的小金条"
+        },
+        {
+            "id": "wuxingque_1",
+            "location": "wuxingque",
+            "sequence": 1,
+            "label": "重感冒",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[重感冒] 吴行阙得了重感冒，鼻塞头昏"
+        },
+        {
+            "id": "wuxingque_2",
+            "location": "wuxingque",
+            "sequence": 2,
+            "label": "匕首",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[匕首] 身上藏有一把匕首"
+        },
+        {
+            "id": "wuxingque_3",
+            "location": "wuxingque",
+            "sequence": 3,
+            "label": "血迹",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[血迹] 脚底和身上都沾有血迹"
+        },
+        {
+            "id": "wuxingque_4",
+            "location": "wuxingque",
+            "sequence": 4,
+            "label": "信件",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[信件] 来自夏仙姑：今晚私奔，你先把他解决掉，凌晨2点屋外树下见"
+        },
+        {
+            "id": "xiaoma_1",
+            "location": "xiaoma",
+            "sequence": 1,
+            "label": "传闻一",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[传闻一] 在私塾说讨厌生父生母，想认薛氏夫妇为亲"
+        },
+        {
+            "id": "xiaoma_2",
+            "location": "xiaoma",
+            "sequence": 2,
+            "label": "掌心",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[掌心] 掌心有很薄的茧"
+        },
+        {
+            "id": "xiaoma_3",
+            "location": "xiaoma",
+            "sequence": 3,
+            "label": "暖炉",
+            "is_deep": false,
+            "parent_id": null,
+            "action_cost": 1,
+            "content": "[暖炉] 房间里的大暖炉，有焚烧过什么的痕迹"
+        }
+    ],
+    "search_rules": {
+        "round_1_action_points": 4,
+        "round_2_action_points": 5,
+        "total_players": 6,
+        "total_action_points": 54,
+        "total_evidence_cost": 58,
+        "unreachable_points": 4,
+        "deep_investigation_only_round_2": true,
+        "collaboration_allowed": true,
+        "collaboration_description": "玩家可以协商拼凑行动点进行深度调查"
+    }
+}

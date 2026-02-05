@@ -1,0 +1,629 @@
+// 主应用控制器 - Main Application Controller
+
+// 交互式圆桌讨论状态
+let isInDiscussion = false;
+let discussionMode = null; // 'intro', 'discuss_1', 'discuss_2'
+
+// 初始化应用
+async function initializeApp() {
+    console.log('Initializing Murder Mystery Game...');
+
+    // 加载游戏数据
+    const success = await gameState.initialize();
+    if (!success) {
+        alert('Failed to load game data. Please check if the backend is running.');
+        return;
+    }
+
+    // 设置事件监听器
+    setupEventListeners();
+
+    console.log('Game initialized successfully!');
+}
+
+// 设置事件监听器
+function setupEventListeners() {
+    // 开篇界面
+    const startBtn = document.getElementById('btn-start-game');
+    if (startBtn) {
+        startBtn.addEventListener('click', () => {
+            goToPhase(GAME_PHASES.SELECT_CHAR);
+            loadCharacters();
+        });
+    }
+
+    // 角色选择
+    document.getElementById('random-character-btn').addEventListener('click', () => {
+        const randomChar = gameState.characters[Math.floor(Math.random() * gameState.characters.length)];
+        selectCharacter(randomChar);
+    });
+
+    // 开始游戏
+    document.getElementById('start-game-btn').addEventListener('click', startGamePhase);
+
+    // 发送消息
+    document.getElementById('send-btn').addEventListener('click', sendPlayerMessage);
+    document.getElementById('player-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendPlayerMessage();
+        }
+    });
+
+    // 输入框获得焦点时暂停剧本播放
+    document.getElementById('player-input').addEventListener('focus', () => {
+        if (scriptPlayer.isPlaying && !scriptPlayer.isPaused) {
+            scriptPlayer.pause();
+        }
+    });
+
+    // 进入下一环节
+    document.getElementById('next-phase-btn').addEventListener('click', () => {
+        // 如果在讨论模式，先结束讨论
+        if (isInDiscussion) {
+            endDiscussion();
+        }
+        advanceToNextPhase();
+    });
+
+    // 完成搜证
+    document.getElementById('finish-search-btn').addEventListener('click', finishSearch);
+
+    // 确认投票
+    document.getElementById('confirm-vote-btn').addEventListener('click', confirmVote);
+
+    // 重新开始
+    document.getElementById('restart-btn').addEventListener('click', () => {
+        gameState.clear();
+        location.reload();
+    });
+
+    // 侧边栏标签切换
+    document.querySelectorAll('.sidebar-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const tabName = e.target.dataset.tab;
+            switchSidebarTab(tabName);
+        });
+    });
+}
+
+// 渲染角色选择
+function renderCharacterSelection() {
+    ui.renderCharacterGrid(gameState.characters, 'character-grid', selectCharacter);
+}
+
+// 选择角色
+async function selectCharacter(character) {
+    try {
+        ui.showLoading(true);
+
+        // 开始游戏
+        await gameState.startGame(character.id);
+
+        // 获取角色剧本
+        const script = await gameState.getCharacterScript(character.id);
+
+        // 显示剧本
+        document.getElementById('character-name').textContent = character.name;
+        ui.renderScript(script);
+
+        ui.showLoading(false);
+        ui.switchScreen('script-reading-screen');
+    } catch (error) {
+        ui.showLoading(false);
+        alert('Failed to select character: ' + error.message);
+    }
+}
+
+// 开始游戏阶段
+async function startGamePhase() {
+    ui.switchScreen('game-main-screen');
+    ui.updatePhaseIndicator(gameState.currentPhase);
+    ui.updateSidebar();
+
+    // 开始自我介绍环节
+    await startIntroPhase();
+}
+
+// 自我介绍环节
+async function startIntroPhase() {
+    ui.updatePhaseIndicator('intro');
+
+    // 显示预设自我介绍
+    const playerChar = gameState.getCharacter(gameState.playerCharacter);
+    ui.addMessage({
+        speaker: '系统',
+        content: '自我介绍环节开始。请先进行自我介绍。',
+        is_player: false
+    });
+
+    // 启用输入
+    enableInput('输入你的自我介绍...');
+}
+
+// 发送玩家消息
+async function sendPlayerMessage() {
+    const input = document.getElementById('player-input');
+    const content = input.value.trim();
+
+    if (!content) return;
+
+    // 如果在讨论模式，使用讨论处理逻辑
+    if (isInDiscussion) {
+        await handleDiscussionInput(content);
+        return;
+    }
+
+    const playerChar = gameState.getCharacter(gameState.playerCharacter);
+    const message = {
+        speaker: playerChar.name,
+        content: content,
+        is_player: true,
+        timestamp: Date.now()
+    };
+
+    // 显示消息
+    ui.addMessage(message);
+    await gameState.addMessage(message);
+
+    // 清空输入框
+    input.value = '';
+
+    // 如果剧本正在播放且暂停，重新生成剧本
+    if (scriptPlayer.isPaused) {
+        await handlePlayerInterruption(content);
+    } else if (gameState.currentPhase === 'intro') {
+        // 自我介绍后，播放NPC自我介绍
+        await playNPCIntroductions();
+    }
+}
+
+
+// NPC自我介绍
+async function playNPCIntroductions() {
+    const npcs = gameState.characters.filter(c => c.id !== gameState.playerCharacter);
+
+    for (const npc of npcs) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        ui.addMessage({
+            speaker: npc.name,
+            content: npc.preset_intro,
+            action: `${npc.name}微微颔首`,
+            is_player: false,
+            timestamp: Date.now()
+        });
+    }
+
+    // 自我介绍结束，开始圆桌讨论
+    setTimeout(() => {
+        ui.addMessage({
+            speaker: '系统',
+            content: '自我介绍环节结束。现在进入圆桌讨论，你可以提出问题或分享线索。\n提示：使用"@角色名 内容"可以指定某个角色回答。',
+            is_player: false
+        });
+
+        // 进入讨论模式
+        startInteractiveDiscussion();
+    }, 2000);
+}
+
+// 交互式圆桌讨论
+function startInteractiveDiscussion(mode = 'intro') {
+    isInDiscussion = true;
+    discussionMode = mode;
+
+    // 启用输入框
+    enableInput('输入你的发言...（点击角色名快速@）');
+
+    const nextPhaseBtn = document.getElementById('next-phase-btn');
+
+    // 显示"结束讨论"按钮
+    nextPhaseBtn.textContent = '结束讨论，进入下一环节';
+    nextPhaseBtn.style.display = 'inline-block';
+    nextPhaseBtn.disabled = false;
+
+    // 生成@提及按钮
+    setupMentionButtons();
+}
+
+// 设置@提及按钮
+function setupMentionButtons() {
+    const mentionContainer = document.getElementById('mention-buttons');
+    mentionContainer.innerHTML = '';
+    mentionContainer.classList.remove('hidden');
+
+    // 获取除玩家外的所有角色
+    const npcs = gameState.characters.filter(c => c.id !== gameState.playerCharacter);
+
+    npcs.forEach(char => {
+        const btn = document.createElement('button');
+        btn.className = 'mention-btn';
+        btn.textContent = `@${char.name}`;
+        btn.addEventListener('click', () => {
+            const input = document.getElementById('player-input');
+            // 在光标位置插入@角色名
+            const cursorPos = input.selectionStart;
+            const currentValue = input.value;
+            const newValue = currentValue.substring(0, cursorPos) + `@${char.name} ` + currentValue.substring(cursorPos);
+            input.value = newValue;
+            // 设置光标位置到插入文本之后
+            input.focus();
+            input.setSelectionRange(cursorPos + char.name.length + 2, cursorPos + char.name.length + 2);
+        });
+        mentionContainer.appendChild(btn);
+    });
+}
+
+// 处理玩家在讨论中的发言
+async function handleDiscussionInput(playerMessage) {
+    if (!isInDiscussion) {
+        return;
+    }
+
+    try {
+        // 检测@提及
+        const mentionMatch = playerMessage.match(/@([\u4e00-\u9fa5]+)/);
+        const mentionedCharacter = mentionMatch ? mentionMatch[1] : null;
+
+        // 添加玩家消息
+        const message = {
+            speaker: gameState.getCharacter(gameState.playerCharacter).name,
+            content: playerMessage,
+            is_player: true,
+            timestamp: Date.now()
+        };
+        ui.addMessage(message);
+        await gameState.addMessage(message);
+
+        // 清空输入框
+        document.getElementById('player-input').value = '';
+
+        // 显示加载提示
+        ui.showLoading(true);
+
+        // 生成AI回复
+        const response = await gameState.generateDiscussionResponse(
+            playerMessage,
+            mentionedCharacter,
+            discussionMode
+        );
+
+        ui.showLoading(false);
+
+        // 播放AI回复
+        if (response && response.messages && response.messages.length > 0) {
+            await scriptPlayer.play(response);
+        } else {
+            // 如果生成失败，添加默认回复
+            ui.addMessage({
+                speaker: '系统',
+                content: '其他人陷入了沉思...',
+                is_player: false
+            });
+        }
+
+    } catch (error) {
+        ui.showLoading(false);
+        console.error('Failed to generate discussion response:', error);
+        ui.addMessage({
+            speaker: '系统',
+            content: 'AI生成失败，请重试。',
+            is_player: false
+        });
+    }
+}
+
+// 结束讨论
+function endDiscussion() {
+    isInDiscussion = false;
+    discussionMode = null;
+
+    ui.addMessage({
+        speaker: '系统',
+        content: '圆桌讨论结束。',
+        is_player: false
+    });
+}
+
+// 玩家打断处理
+async function handlePlayerInterruption(playerInput) {
+    try {
+        ui.showLoading(true);
+
+        const remainingScript = scriptPlayer.getRemainingScript();
+        const newScript = await gameState.regenerateScript(playerInput, remainingScript);
+
+        ui.showLoading(false);
+
+        // 继续播放新剧本
+        scriptPlayer.resume(newScript);
+    } catch (error) {
+        ui.showLoading(false);
+        console.error('Failed to regenerate script:', error);
+    }
+}
+
+// 推进到下一环节
+async function advanceToNextPhase() {
+    try {
+        ui.showLoading(true);
+
+        // 生成环节过渡描写
+        const narrative = await gameState.getPhaseTransition(gameState.currentPhase);
+        ui.showPhaseNarrative(narrative.narrative);
+
+        // 推进阶段
+        const newPhase = await gameState.advancePhase();
+        ui.updatePhaseIndicator(newPhase);
+
+        ui.showLoading(false);
+
+        // 根据新阶段执行相应逻辑
+        if (newPhase === 'search_1' || newPhase === 'search_2') {
+            startSearchPhase(newPhase);
+        } else if (newPhase === 'discuss_1' || newPhase === 'discuss_2') {
+            startDiscussPhase(newPhase);
+        } else if (newPhase === 'vote') {
+            startVotePhase();
+        }
+    } catch (error) {
+        ui.showLoading(false);
+        alert('Failed to advance phase: ' + error.message);
+    }
+}
+
+// 搜证环节
+let currentActionPoints = 0;
+let currentSearchRound = 1;
+let aiSearchTimer = null;
+let aiRemainingActions = 0;
+
+function startSearchPhase(phase) {
+    currentSearchRound = phase === 'search_1' ? 1 : 2;
+    currentActionPoints = currentSearchRound === 1 ? gameState.actionPoints.round1 : gameState.actionPoints.round2;
+
+    updateActionPointsDisplay();
+    document.getElementById('search-round-info').textContent =
+        currentSearchRound === 1 ? '第一轮搜证（不可深度调查）' : '第二轮搜证（可深度调查）';
+
+    const collectedIds = gameState.collectedEvidence.map(e => e.id);
+
+    // 定义搜证处理函数（用于递归调用）
+    const searchHandler = async (location) => {
+        if (currentActionPoints <= 0) {
+            alert('行动点数不足！');
+            return;
+        }
+
+        try {
+            ui.showLoading(true);
+            const found = await gameState.searchEvidence(location.id);
+            ui.showLoading(false);
+
+            if (found.length > 0) {
+                // 扣除行动点
+                currentActionPoints--;
+                updateActionPointsDisplay();
+
+                // 显示所有找到的证据
+                for (const evidence of found) {
+                    await showEvidenceModal(evidence, location.name);
+                }
+
+                ui.updateSidebar();
+
+                // 刷新地点列表以更新剩余数量
+                const updatedIds = gameState.collectedEvidence.map(e => e.id);
+                ui.renderLocations(gameState.locations, searchHandler, updatedIds, currentSearchRound === 2);
+
+                // 检查玩家是否花完所有点数
+                if (currentActionPoints === 0) {
+                    triggerAIInstantComplete();
+                }
+            } else {
+                // 即使没找到也扣点
+                currentActionPoints--;
+                updateActionPointsDisplay();
+                alert('在此地点没有发现新证据');
+            }
+        } catch (error) {
+            ui.showLoading(false);
+            alert('搜证失败: ' + error.message);
+        }
+    };
+
+    // 初次渲染地点列表
+    ui.renderLocations(gameState.locations, searchHandler, collectedIds, currentSearchRound === 2);
+
+    // 启动AI自动搜证
+    startAIAutoSearch();
+
+    ui.switchScreen('search-screen');
+}
+
+// 更新行动点数显示
+function updateActionPointsDisplay() {
+    document.getElementById('search-action-points').textContent = currentActionPoints;
+}
+
+// 显示证据详情模态框
+function showEvidenceModal(evidence, sourceName) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('evidence-modal');
+        const closeBtn = document.getElementById('close-evidence-btn');
+        const publicBtn = document.getElementById('public-evidence-btn');
+        const publicStatus = document.getElementById('evidence-public-status');
+
+        // 填充证据信息
+        document.getElementById('evidence-modal-title').textContent = evidence.label;
+        document.getElementById('evidence-source').textContent = sourceName || evidence.location;
+        document.getElementById('evidence-content').textContent = evidence.content;
+
+        // 显示深度调查提示
+        const deepInfo = document.getElementById('evidence-deep-info');
+        if (evidence.requires_deep_search) {
+            deepInfo.classList.remove('hidden');
+        } else {
+            deepInfo.classList.add('hidden');
+        }
+
+        // 检查是否已公开
+        const isPublic = gameState.publicEvidence.includes(evidence.id);
+        if (isPublic) {
+            publicBtn.classList.add('hidden');
+            publicStatus.classList.remove('hidden');
+        } else {
+            publicBtn.classList.remove('hidden');
+            publicStatus.classList.add('hidden');
+        }
+
+        // 显示模态框
+        modal.classList.remove('hidden');
+
+        // 关闭按钮
+        const handleClose = () => {
+            modal.classList.add('hidden');
+            closeBtn.removeEventListener('click', handleClose);
+            publicBtn.removeEventListener('click', handlePublic);
+            resolve();
+        };
+
+        // 公开证据按钮
+        const handlePublic = async () => {
+            try {
+                await gameState.makeEvidencePublic(evidence.id);
+                publicBtn.classList.add('hidden');
+                publicStatus.classList.remove('hidden');
+                ui.updateSidebar();
+                alert(`证据"${evidence.label}"已公开`);
+            } catch (error) {
+                alert('公开证据失败: ' + error.message);
+            }
+        };
+
+        closeBtn.addEventListener('click', handleClose);
+        publicBtn.addEventListener('click', handlePublic);
+    });
+}
+
+// 完成搜证
+function finishSearch() {
+    ui.switchScreen('game-main-screen');
+    ui.addMessage({
+        speaker: '系统',
+        content: '搜证环节结束。点击"进入下一环节"开始讨论。',
+        is_player: false
+    });
+}
+
+// 讨论环节
+async function startDiscussPhase(phase) {
+    ui.switchScreen('game-main-screen');
+
+    try {
+        ui.showLoading(true);
+
+        // 生成批量剧本
+        const script = await gameState.generateScript(phase, 180);
+
+        ui.showLoading(false);
+
+        // 播放剧本
+        await scriptPlayer.play(script);
+
+        // 播放结束提示
+        ui.addMessage({
+            speaker: '系统',
+            content: '讨论环节结束。点击"进入下一环节"继续游戏。',
+            is_player: false
+        });
+    } catch (error) {
+        ui.showLoading(false);
+        alert('Failed to start discussion: ' + error.message);
+    }
+}
+
+// 投票环节
+function startVotePhase() {
+    let selectedSuspect = null;
+
+    ui.renderCharacterGrid(
+        [...gameState.characters, { id: 'suicide', name: '自杀', role: '', age: 0 }],
+        'vote-character-grid',
+        (char) => {
+            selectedSuspect = char.id;
+            document.querySelectorAll('#vote-character-grid .character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.character-card').classList.add('selected');
+            document.getElementById('confirm-vote-btn').disabled = false;
+        }
+    );
+
+    document.getElementById('confirm-vote-btn').onclick = async () => {
+        if (!selectedSuspect) return;
+
+        try {
+            ui.showLoading(true);
+
+            // 玩家投票
+            await gameState.vote(selectedSuspect);
+
+            // 获取NPC投票
+            await gameState.getNPCVotes();
+
+            // 获取投票结果
+            const result = await gameState.getVoteResult();
+
+            // 推进到揭晓阶段
+            await gameState.advancePhase();
+
+            ui.showLoading(false);
+
+            // 显示结果
+            showRevealScreen(result);
+        } catch (error) {
+            ui.showLoading(false);
+            alert('投票失败: ' + error.message);
+        }
+    };
+
+    ui.switchScreen('vote-screen');
+}
+
+// 真相揭晓
+async function showRevealScreen(voteResult) {
+    try {
+        ui.showLoading(true);
+
+        // 获取结局续写
+        const epilogue = await gameState.getEndingEpilogue();
+
+        ui.showLoading(false);
+
+        // 渲染结果
+        ui.renderVoteResult(voteResult);
+        ui.renderEndingEpilogue(epilogue);
+        ui.renderTruthReveal();
+
+        ui.switchScreen('reveal-screen');
+    } catch (error) {
+        ui.showLoading(false);
+        alert('Failed to show reveal: ' + error.message);
+    }
+}
+
+// 切换侧边栏标签
+function switchSidebarTab(tabName) {
+    document.querySelectorAll('.sidebar-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', initializeApp);

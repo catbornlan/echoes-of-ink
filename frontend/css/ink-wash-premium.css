@@ -1,0 +1,556 @@
+/**
+ * 东方水墨风格 CSS - 电影《影》美学
+ * Chinese Ink Wash Painting Style - Inspired by "Shadow" Film
+ */
+
+/* ============================================
+   1. 字体引入 - Calligraphy Fonts
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Ma+Shan+Zheng&display=swap');
+
+/* ============================================
+   2. 水墨色板 (Color Palette)
+   ============================================ */
+:root {
+    /* 宣纸/米白背景 */
+    --rice-paper: #F5F1E8;
+    --rice-paper-light: #FAF8F3;
+    --rice-paper-dark: #EBE7DC;
+
+    /* 墨色系 */
+    --deep-ink: #1A1A1A;
+    --charcoal: #3A3A3A;
+    --medium-gray: #6B6B6B;
+    --light-wash: #9B9B9B;
+    --pale-wash: #C5C5C5;
+    --faint-ink: #E0E0E0;
+
+    /* 强调色（极少使用）*/
+    --subtle-red: #8B4513;
+
+    /* 字体 */
+    --font-title: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+    --font-body: 'Noto Serif SC', serif;
+}
+
+/* ============================================
+   3. 基础样式重置
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--rice-paper);
+    color: var(--deep-ink);
+    line-height: 1.8;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* 纸张纹理效果 */
+    background-image:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.01) 2px,
+            rgba(0, 0, 0, 0.01) 4px);
+}
+
+/* ============================================
+   4. 水墨笔触效果 (Brush Stroke Effects)
+   ============================================ */
+
+/* 毛笔边框效果 */
+.brush-stroke {
+    position: relative;
+    background: var(--rice-paper-light);
+    border: none;
+    box-shadow: none;
+}
+
+.brush-stroke::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: var(--deep-ink);
+    opacity: 0.15;
+    filter: blur(2px);
+    mask-image: paint(rough-edges);
+    -webkit-mask-image: paint(rough-edges);
+    z-index: -1;
+}
+
+/* 不规则墨迹边框 */
+.ink-border {
+    position: relative;
+    padding: 2px;
+    background: linear-gradient(135deg,
+            var(--charcoal) 0%,
+            var(--medium-gray) 50%,
+            var(--charcoal) 100%);
+    background-size: 200% 200%;
+    /* 添加纹理质感 */
+    filter: contrast(1.1) brightness(0.95);
+}
+
+.ink-border::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    filter: blur(1px);
+    opacity: 0.3;
+    z-index: -1;
+}
+
+/* 墨水晕染效果 */
+.ink-diffusion {
+    position: relative;
+    background: var(--rice-paper);
+}
+
+.ink-diffusion::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center,
+            transparent 30%,
+            rgba(26, 26, 26, 0.03) 50%,
+            rgba(26, 26, 26, 0.08) 100%);
+    pointer-events: none;
+}
+
+/* ============================================
+   5. 屏幕容器通用样式
+   ============================================ */
+.screen {
+    display: none;
+    min-height: 100vh;
+    padding: 60px 40px;
+    position: relative;
+    background: var(--rice-paper);
+}
+
+.screen.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   6. 标题样式 (Typography)
+   ============================================ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-title);
+    font-weight: 700;
+    color: var(--deep-ink);
+    letter-spacing: 0.08em;
+    margin-bottom: 1em;
+}
+
+.game-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    letter-spacing: 0.15em;
+    /* 墨迹效果 */
+    text-shadow:
+        2px 2px 4px rgba(26, 26, 26, 0.1),
+        -1px -1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.game-title::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 3px;
+    background: linear-gradient(to right,
+            transparent,
+            var(--charcoal),
+            transparent);
+    filter: blur(1px);
+}
+
+/* ============================================
+   7. 按钮样式 (Buttons)
+   ============================================ */
+button,
+.btn {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 16px 48px;
+    background: transparent;
+    color: var(--deep-ink);
+    border: 2px solid var(--charcoal);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    letter-spacing: 0.1em;
+    /* 移除圆角 */
+    border-radius: 0;
+}
+
+/* 毛笔笔触按钮效果 */
+button::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: var(--charcoal);
+    opacity: 0;
+    filter: blur(4px);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+button:hover {
+    background: var(--deep-ink);
+    color: var(--rice-paper);
+    border-color: var(--deep-ink);
+    transform: translateY(-2px);
+}
+
+button:hover::before {
+    opacity: 0.15;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--faint-ink);
+}
+
+/* ============================================
+   8. 卡片样式 (Cards)
+   ============================================ */
+.character-card,
+.location-card,
+.evidence-item {
+    background: var(--rice-paper-light);
+    padding: 24px;
+    margin: 16px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* 移除圆角 */
+    border-radius: 0;
+    /* 墨迹边框 */
+    box-shadow:
+        inset 0 0 0 2px var(--charcoal),
+        3px 3px 8px rgba(26, 26, 26, 0.08);
+}
+
+.character-card::before,
+.location-card::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    background: var(--charcoal);
+    opacity: 0;
+    filter: blur(8px);
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.character-card:hover,
+.location-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        inset 0 0 0 2px var(--deep-ink),
+        5px 5px 15px rgba(26, 26, 26, 0.15);
+}
+
+.character-card:hover::before,
+.location-card:hover::before {
+    opacity: 0.2;
+}
+
+/* 角色剪影 */
+.character-silhouette {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 20px;
+    background: var(--rice-paper);
+    position: relative;
+    /* 使用背景图片 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* 强制水墨效果 */
+    filter: grayscale(100%) contrast(120%) brightness(110%);
+    mix-blend-mode: multiply;
+}
+
+.character-silhouette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 30%,
+            transparent 20%,
+            rgba(26, 26, 26, 0.05) 80%);
+}
+
+.character-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 16px 0 8px;
+    font-family: var(--font-title);
+    letter-spacing: 0.12em;
+}
+
+.character-role {
+    font-size: 1rem;
+    color: var(--medium-gray);
+    text-align: center;
+    letter-spacing: 0.08em;
+}
+
+/* ============================================
+   9. 输入框样式 (Input Fields)
+   ============================================ */
+input[type="text"],
+textarea {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    padding: 14px 20px;
+    background: var(--rice-paper-light);
+    color: var(--deep-ink);
+    border: 2px solid var(--light-wash);
+    border-radius: 0;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--charcoal);
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.08);
+}
+
+/* ============================================
+   10. 对话气泡 (Message Bubbles)
+   ============================================ */
+.message {
+    margin: 20px 0;
+    padding: 18px 24px;
+    max-width: 75%;
+    position: relative;
+    background: var(--rice-paper-light);
+    /* 移除圆角 */
+    border-radius: 0;
+}
+
+.message.player {
+    margin-left: auto;
+    background: var(--faint-ink);
+    border-left: 4px solid var(--deep-ink);
+}
+
+.message.npc {
+    margin-right: auto;
+    border-right: 4px solid var(--charcoal);
+}
+
+.message-speaker {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--charcoal);
+    font-family: var(--font-title);
+    letter-spacing: 0.08em;
+}
+
+.message-content {
+    line-height: 1.9;
+    color: var(--deep-ink);
+    white-space: pre-wrap;
+}
+
+.message-action {
+    font-size: 0.95rem;
+    color: var(--medium-gray);
+    font-style: italic;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--pale-wash);
+}
+
+/* ============================================
+   11. 背景装饰效果
+   ============================================ */
+.ink-background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--rice-paper);
+    /* 水墨渲染效果 */
+    background-image:
+        radial-gradient(circle at 20% 30%,
+            transparent 0%,
+            rgba(26, 26, 26, 0.02) 50%,
+            transparent 100%),
+        radial-gradient(circle at 80% 70%,
+            transparent 0%,
+            rgba(26, 26, 26, 0.03) 50%,
+            transparent 100%);
+    /* 纸张纹理 */
+    background-blend-mode: multiply;
+}
+
+/* 山水背景图 */
+.landscape-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40%;
+    height: 100%;
+    background-image: url('https://picsum.photos/seed/mountain/800/1200?grayscale');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.08;
+    filter: grayscale(100%) contrast(120%) brightness(110%);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+}
+
+/* ============================================
+   12. 响应式设计
+   ============================================ */
+@media (max-width: 768px) {
+    .game-title {
+        font-size: 2.8rem;
+    }
+
+    .character-card,
+    .location-card {
+        margin: 12px;
+        padding: 20px;
+    }
+
+    .character-silhouette {
+        width: 140px;
+        height: 140px;
+    }
+
+    .message {
+        max-width: 90%;
+        padding: 14px 18px;
+    }
+
+    button,
+    .btn {
+        padding: 12px 32px;
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   13. 加载动画 (Loading)
+   ============================================ */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(245, 241, 232, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--pale-wash);
+    border-top-color: var(--deep-ink);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   14. 特殊效果 - 墨迹飞溅
+   ============================================ */
+.ink-splatter {
+    position: relative;
+}
+
+.ink-splatter::after {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    top: -10%;
+    left: -10%;
+    background: radial-gradient(circle,
+            transparent 40%,
+            rgba(26, 26, 26, 0.03) 60%,
+            transparent 80%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.ink-splatter:hover::after {
+    opacity: 1;
+}
+
+/* ============================================
+   15. 滚动条样式
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--rice-paper);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--light-wash);
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--charcoal);
+}

@@ -1,0 +1,343 @@
+/**
+ * 动态水墨晕染背景动画
+ * Dynamic Ink Diffusion Background Animation
+ */
+
+/* ============================================
+   水墨晕染层基础样式
+   ============================================ */
+.ink-diffusion-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -10;
+    opacity: 0.08;
+    mix-blend-mode: multiply;
+}
+
+/* ============================================
+   第一层 - 大面积墨迹扩散
+   ============================================ */
+.ink-layer-1 {
+    background: radial-gradient(ellipse at 20% 40%,
+            rgba(26, 26, 26, 0.4) 0%,
+            transparent 40%),
+        radial-gradient(ellipse at 80% 60%,
+            rgba(58, 58, 58, 0.3) 0%,
+            transparent 50%),
+        radial-gradient(circle at 50% 80%,
+            rgba(26, 26, 26, 0.25) 0%,
+            transparent 45%);
+    animation: inkFlow1 60s ease-in-out infinite;
+}
+
+@keyframes inkFlow1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.08;
+    }
+
+    25% {
+        transform: translate(3%, -2%) scale(1.05);
+        opacity: 0.12;
+    }
+
+    50% {
+        transform: translate(-2%, 4%) scale(0.98);
+        opacity: 0.06;
+    }
+
+    75% {
+        transform: translate(4%, 2%) scale(1.03);
+        opacity: 0.10;
+    }
+}
+
+/* ============================================
+   第二层 - 烟雾缭绕效果
+   ============================================ */
+.ink-layer-2 {
+    background:
+        radial-gradient(ellipse at 60% 30%,
+            rgba(107, 107, 107, 0.2) 0%,
+            transparent 35%),
+        radial-gradient(ellipse at 30% 70%,
+            rgba(58, 58, 58, 0.25) 0%,
+            transparent 40%),
+        radial-gradient(circle at 85% 50%,
+            rgba(155, 155, 155, 0.15) 0%,
+            transparent 38%);
+    animation: inkFlow2 80s ease-in-out infinite reverse;
+}
+
+@keyframes inkFlow2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.06;
+    }
+
+    33% {
+        transform: translate(-3%, 3%) rotate(1deg);
+        opacity: 0.10;
+    }
+
+    66% {
+        transform: translate(2%, -2%) rotate(-1deg);
+        opacity: 0.08;
+    }
+}
+
+/* ============================================
+   第三层 - 细密墨点漂移
+   ============================================ */
+.ink-layer-3 {
+    background:
+        radial-gradient(circle at 15% 20%,
+            rgba(26, 26, 26, 0.3) 0%,
+            transparent 25%),
+        radial-gradient(circle at 75% 35%,
+            rgba(58, 58, 58, 0.2) 0%,
+            transparent 30%),
+        radial-gradient(circle at 40% 65%,
+            rgba(107, 107, 107, 0.15) 0%,
+            transparent 28%),
+        radial-gradient(circle at 90% 80%,
+            rgba(58, 58, 58, 0.25) 0%,
+            transparent 32%);
+    animation: inkFlow3 100s linear infinite;
+}
+
+@keyframes inkFlow3 {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.05;
+    }
+
+    25% {
+        transform: translate(2%, 4%) scale(1.02);
+        opacity: 0.09;
+    }
+
+    50% {
+        transform: translate(-3%, -2%) scale(0.97);
+        opacity: 0.07;
+    }
+
+    75% {
+        transform: translate(4%, -3%) scale(1.04);
+        opacity: 0.08;
+    }
+
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.05;
+    }
+}
+
+/* ============================================
+   第四层 - 云雾流动
+   ============================================ */
+.ink-layer-4 {
+    background:
+        linear-gradient(135deg,
+            transparent 0%,
+            rgba(26, 26, 26, 0.08) 20%,
+            transparent 40%,
+            rgba(58, 58, 58, 0.05) 60%,
+            transparent 80%),
+        linear-gradient(45deg,
+            rgba(107, 107, 107, 0.04) 0%,
+            transparent 30%,
+            rgba(26, 26, 26, 0.06) 70%,
+            transparent 100%);
+    background-size: 200% 200%;
+    animation: inkFlow4 120s ease-in-out infinite;
+}
+
+@keyframes inkFlow4 {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+        opacity: 0.04;
+    }
+
+    25% {
+        background-position: 50% 75%;
+        opacity: 0.08;
+    }
+
+    50% {
+        background-position: 100% 50%;
+        opacity: 0.05;
+    }
+
+    75% {
+        background-position: 50% 25%;
+        opacity: 0.07;
+    }
+}
+
+/* ============================================
+   第五层 - 微妙的脉动效果
+   ============================================ */
+.ink-layer-5 {
+    background: radial-gradient(circle at center,
+            rgba(26, 26, 26, 0.02) 0%,
+            transparent 60%);
+    animation: inkPulse 45s ease-in-out infinite;
+}
+
+@keyframes inkPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.03;
+    }
+
+    50% {
+        transform: scale(1.15);
+        opacity: 0.07;
+    }
+}
+
+/* ============================================
+   特殊效果 - 墨点飘落
+   ============================================ */
+.ink-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -9;
+    opacity: 0.04;
+}
+
+.ink-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at center,
+            rgba(26, 26, 26, 0.6) 0%,
+            transparent 70%);
+}
+
+/* 不同大小的墨点 */
+.ink-particle-1 {
+    width: 3px;
+    height: 3px;
+    top: 10%;
+    left: 20%;
+    animation: particleFloat1 40s ease-in-out infinite;
+}
+
+.ink-particle-2 {
+    width: 5px;
+    height: 5px;
+    top: 30%;
+    left: 70%;
+    animation: particleFloat2 55s ease-in-out infinite;
+}
+
+.ink-particle-3 {
+    width: 4px;
+    height: 4px;
+    top: 60%;
+    left: 40%;
+    animation: particleFloat3 48s ease-in-out infinite;
+}
+
+.ink-particle-4 {
+    width: 2px;
+    height: 2px;
+    top: 80%;
+    left: 85%;
+    animation: particleFloat1 65s ease-in-out infinite reverse;
+}
+
+@keyframes particleFloat1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translate(30px, 60px);
+        opacity: 0.8;
+    }
+}
+
+@keyframes particleFloat2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: translate(-40px, 80px);
+        opacity: 0.7;
+    }
+}
+
+@keyframes particleFloat3 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.2;
+    }
+
+    50% {
+        transform: translate(25px, -50px);
+        opacity: 0.6;
+    }
+}
+
+/* ============================================
+   性能优化
+   ============================================ */
+.ink-diffusion-layer,
+.ink-particles {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* 移动端简化动画 */
+@media (max-width: 768px) {
+
+    .ink-layer-3,
+    .ink-layer-4,
+    .ink-layer-5,
+    .ink-particles {
+        display: none;
+    }
+
+    .ink-layer-1,
+    .ink-layer-2 {
+        animation-duration: 40s;
+    }
+}
+
+/* 低性能设备优化 */
+@media (prefers-reduced-motion: reduce) {
+
+    .ink-diffusion-layer,
+    .ink-particles {
+        animation: none !important;
+        opacity: 0.04;
+    }
+}
