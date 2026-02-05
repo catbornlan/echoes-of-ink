@@ -302,7 +302,7 @@ class UIManager {
 
         container.innerHTML = '<h4>收集的证据</h4>';
 
-        console.log(`[renderEvidence] Rendering ${evidenceList.length} evidence items to ${containerId} `);
+        console.log(`[renderEvidence] Rendering ${evidenceList.length} evidence items to ${container.id || 'container'} `);
 
         // 如果没有证据，显示提示
         if (!evidenceList || evidenceList.length === 0) {

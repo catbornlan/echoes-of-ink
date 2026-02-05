@@ -523,17 +523,13 @@ async function handleDiscussionInput(playerMessage) {
         // 清空输入框
         document.getElementById('player-input').value = '';
 
-        // 显示加载提示
-        ui.showLoading(true, '继续圆桌讨论', '众人剑拔弩张地讨论着，每个人脸上都挂着一丝慌张的神色，似乎有着更多秘密等待被挖掘…');
-
+        // 不显示loading modal，让对话自然流动
         // 生成AI回复（基于当前所有对话+剧本+证据）
         const response = await gameState.generateDiscussionResponse(
             playerMessage,
             mentionedCharacter,
             discussionMode
         );
-
-        ui.showLoading(false);
 
         // 播放AI回复
         if (response && response.messages && response.messages.length > 0) {
@@ -557,7 +553,6 @@ async function handleDiscussionInput(playerMessage) {
         }, 2000);
 
     } catch (error) {
-        ui.showLoading(false);
         console.error('Discussion input error:', error);
         ui.showToast('发言失败，请重试', 'error');
     }
@@ -581,6 +576,31 @@ function endDiscussion() {
         content: '圆桌讨论结束。',
         is_player: false
     });
+}
+
+// 完成搜证
+async function finishSearch() {
+    console.log('完成搜证，进入下一环节');
+
+    // 隐藏搜证界面
+    const searchPhase = document.getElementById('phase-search');
+    if (searchPhase) {
+        searchPhase.classList.add('hidden');
+    }
+
+    // 恢复消息容器和输入区域
+    const messagesContainer = document.getElementById('messages-container');
+    const inputArea = messagesContainer?.parentElement;
+    if (messagesContainer) messagesContainer.classList.remove('hidden');
+    if (inputArea) inputArea.classList.remove('hidden');
+
+    ui.addMessage({
+        speaker: '系统',
+        content: '搜证环节结束。',
+        is_player: false
+    });
+
+    await advanceToNextPhase();
 }
 
 // 玩家打断处理
@@ -664,8 +684,21 @@ let currentSearchRound = 1;
 function startSearchPhase(phase) {
     console.log(`开始搜证环节: ${phase}, 轮次: ${currentSearchRound}`);
 
-    // 切换到搜证页面
-    goToPhase(GAME_PHASES.SEARCH);
+    // 不切换phase，而是在game-main内部显示搜证界面
+    // 隐藏消息容器和输入区域
+    const messagesContainer = document.getElementById('messages-container');
+    const inputArea = messagesContainer?.parentElement;
+    if (messagesContainer) messagesContainer.classList.add('hidden');
+    if (inputArea) inputArea.classList.add('hidden');
+
+    // 显示搜证界面
+    const searchPhase = document.getElementById('phase-search');
+    if (searchPhase) {
+        searchPhase.classList.remove('hidden');
+    } else {
+        console.error('搜证界面容器未找到');
+        return;
+    }
 
     // 禁用输入框（搜证环节不可发言）
     if (window.updateInputState) {
@@ -673,7 +706,7 @@ function startSearchPhase(phase) {
     }
 
     // 更新阶段指示器
-    ui.updatePhaseIndicator(phase === 'search_1' ? 'search1' : 'search2');
+    ui.updatePhaseIndicator(phase === 'search_1' ? 'search_1' : 'search_2');
 
     // 确定当前搜证轮次
     currentSearchRound = gameState.currentPhase === 'search_1' ? 1 : 2;
@@ -1024,6 +1057,19 @@ async function finishSearch() {
 
 // 讨论环节
 async function startDiscussPhase(phase) {
+    // 确保隐藏搜证界面
+    const searchPhase = document.getElementById('phase-search');
+    if (searchPhase) {
+        searchPhase.classList.add('hidden');
+    }
+
+    // 确保显示消息容器和输入区域
+    const messagesContainer = document.getElementById('messages-container');
+    const inputArea = messagesContainer?.parentElement;
+    if (messagesContainer) messagesContainer.classList.remove('hidden');
+    if (inputArea) inputArea.classList.remove('hidden');
+
+    // 确保在game-main phase
     goToPhase(GAME_PHASES.GAME_MAIN);
 
     try {

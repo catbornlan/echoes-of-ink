@@ -3,7 +3,8 @@ FastAPI main application for Murder Mystery Game.
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from typing import List, Dict, Any
 import json
 
@@ -27,10 +28,14 @@ app.add_middleware(
 )
 
 
+# 挂载静态文件
+app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
 @app.get("/")
 async def root():
-    """Root endpoint."""
-    return {"message": "Murder Mystery Game API", "game": "不知境中人"}
+    """Serve the frontend page."""
+    return FileResponse('frontend/index.html')
 
 
 @app.get("/api/characters", response_model=List[Character])
