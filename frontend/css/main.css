@@ -518,3 +518,44 @@ body {
         display: none;
     }
 }
+
+/* 侧边栏证据项目样式 */
+.evidence-item {
+    padding: 12px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.evidence-item:hover {
+    background: #fff;
+    border-color: var(--ink-black);
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.evidence-item strong {
+    font-weight: 500;
+    color: var(--ink-black);
+}
+
+.make-public-btn {
+    padding: 4px 10px;
+    background: var(--ink-black);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    font-size: 0.8em;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.make-public-btn:hover {
+    opacity: 1;
+}
