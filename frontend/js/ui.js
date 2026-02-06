@@ -79,20 +79,26 @@ class UIManager {
             const portraitUrl = `https://api.dicebear.com/9.x/notionists/svg?seed=${char.id}`;
 
             const card = document.createElement('div');
-            card.className = 'card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-all animate__animated animate__fadeInUp';
-            card.style.animationDelay = `${index * 0.1}s`;
+            card.className = 'card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-all';
+            // 移除动画以确保可点击
+            // card.style.animationDelay = `${index * 0.1}s`;
 
             card.innerHTML = `
                 <figure class="px-10 pt-10">
-                    <img src="${portraitUrl}" alt="${char.name}" class="rounded-xl h-32 w-32 object-cover" />
+                    <img src="${portraitUrl}" alt="${char.name}" class="rounded-xl h-32 w-32 object-cover pointer-events-none" />
                 </figure>
-                <div class="card-body items-center text-center">
+                <div class="card-body items-center text-center pointer-events-none">
                     <h2 class="card-title">${char.name}</h2>
                     <p class="text-sm opacity-70">${char.role}，${char.age}岁</p>
                 </div>
             `;
 
-            card.addEventListener('click', () => onSelect(char));
+            // 确保点击事件直接绑定到card
+            card.onclick = (e) => {
+                e.stopPropagation();
+                console.log('Card clicked (onclick):', char.name);
+                onSelect(char, card);
+            };
             container.appendChild(card);
         });
     }
@@ -331,7 +337,7 @@ class UIManager {
             }
 
             evDiv.innerHTML = `
-                < strong > ${ev.label}</strong >
+                <strong>${ev.label}</strong>
                     ${isPublic ? '<span style="color: var(--subtle-red); margin-left: 8px;">✓ 已公开</span>' : ''}
             `;
 
@@ -522,7 +528,7 @@ class UIManager {
                         ${voteResult?.is_correct ? '✓ 真相大白' : '✗ 误判悲剧'}
                     </h3>
                     <div style="line-height: 2; white-space: pre-wrap; font-size: 1.05em; color: #333;">
-                        ${epilogueText}
+                        ${typeof epilogueText === 'object' ? (epilogueText.content || JSON.stringify(epilogueText)) : epilogueText}
                     </div>
                 </div>
                 

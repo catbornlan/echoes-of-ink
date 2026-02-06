@@ -181,6 +181,12 @@ class GameState {
                     action_points: actionPoints
                 })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || '搜证失败');
+            }
+
             const found = await response.json();
 
             // 更新本地状态

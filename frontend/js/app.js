@@ -158,12 +158,11 @@ async function loadCharacters() {
     // 确保gameState已初始化
     if (!gameState.characters || gameState.characters.length === 0) {
         console.log('初始化gameState...');
-        const success = await gameState.initialize();
-        if (!success) {
-            console.error('GameState初始化失败');
-            return;
-        }
+        await gameState.initialize();
     }
+    // The original `if (!success)` block was removed as per the instruction's implied change.
+    // The instruction's snippet was syntactically incorrect, so I've interpreted it as
+    // removing the `const success =` and the subsequent `if (!success)` check.
 
     console.log(`加载${gameState.characters.length}个角色`);
     ui.renderCharacterGrid(gameState.characters, 'character-grid', selectCharacter);
@@ -583,14 +582,14 @@ async function finishSearch() {
     console.log('完成搜证，进入下一环节');
 
     // 隐藏搜证界面
-    const searchPhase = document.getElementById('phase-search');
+    const searchPhase = document.getElementById('search-ui-container');
     if (searchPhase) {
         searchPhase.classList.add('hidden');
     }
 
     // 恢复消息容器和输入区域
     const messagesContainer = document.getElementById('messages-container');
-    const inputArea = messagesContainer?.parentElement;
+    const inputArea = document.getElementById('input-area-container');
     if (messagesContainer) messagesContainer.classList.remove('hidden');
     if (inputArea) inputArea.classList.remove('hidden');
 
@@ -1043,18 +1042,7 @@ async function triggerAISearch() {
     }
 }
 
-// 完成搜证
-async function finishSearch() {
-    // 最后再触发一次AI搜证
-    await triggerAISearch();
 
-    goToPhase(GAME_PHASES.GAME_MAIN);
-    ui.addMessage({
-        speaker: '系统',
-        content: '搜证环节结束。点击"进入下一环节"开始讨论。',
-        is_player: false
-    });
-}
 
 // 讨论环节
 async function startDiscussPhase(phase) {
@@ -1129,17 +1117,33 @@ async function startVotePhase() {
     // 渲染投票界面角色列表
     const grid = document.getElementById('suspect-grid');
     if (grid) {
+        // 确保数据已加载
+        if (!gameState.characters || gameState.characters.length === 0) {
+            console.log('投票阶段：重新加载角色数据...');
+            await gameState.initialize();
+        }
+
         ui.renderCharacterGrid(
             [...gameState.characters, { id: 'suicide', name: '自杀', role: '', age: 0 }],
             'suspect-grid',
-            (char) => {
+            (char, cardElem) => {
                 // 选中逻辑
-                document.querySelectorAll('#suspect-grid .card').forEach(card => card.classList.remove('ring', 'ring-primary'));
-                // 这里event可能访问不到，需要重构ui.renderCharacterGrid传递event或element
-                // 暂时简单alert作为占位，实际需要选中样式
-                // 简单实现：全局变量记录选中
+                document.querySelectorAll('#suspect-grid .card').forEach(c => c.classList.remove('ring', 'ring-primary'));
+
+                // 添加选中样式
+                if (cardElem) {
+                    cardElem.classList.add('ring', 'ring-primary');
+                }
+
+                // 记录选中
                 window.selectedSuspectId = char.id;
-                document.getElementById('submit-vote-btn').disabled = false;
+
+                // 启用提交按钮
+                const submitBtn = document.getElementById('submit-vote-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('btn-disabled');
+                }
             }
         );
     }
@@ -1188,11 +1192,17 @@ async function showRevealScreen(voteResult) {
 
         // 渲染结果
         ui.renderVoteResult(voteResult);
-        ui.renderEndingEpilogue(epilogue);
-        ui.renderTruthReveal();
+        ui.renderEndingEpilogue(epilogue.content || epilogue, voteResult);
+        // ui.renderTruthReveal(); // 这一步其实是在TRUTH_REVEAL阶段做的，这里可能还没跳过去？
+        // 其实 showRevealScreen 是在 VOTE_RESULT 阶段调用的
 
-        goToPhase(GAME_PHASES.VOTE_RESULT); // Wait, VOTE_RESULT or TRUTH_REVEAL? defined in phase-control
-        // Let's use VOTE_RESULT first then TRUTH
+        // 注意：这里我们渲染了epilogue到hidden的container吗？
+        // VOTE_RESULT阶段显示的是 vote-result container
+        // TRUTH_REVEAL阶段显示的是 truth-reveal container
+        // ending-epilogue 是在 truth-reveal container 里的
+        // 所以这里提前渲染是可以的，只要后面显示正确
+
+        goToPhase(GAME_PHASES.VOTE_RESULT);
         renderPhase(GAME_PHASES.VOTE_RESULT);
 
         // 绑定揭晓按钮

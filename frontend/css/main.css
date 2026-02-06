@@ -149,6 +149,13 @@ body {
     box-shadow: 0 10px 20px var(--shadow-ink);
 }
 
+/* 强制提高层级，确保不被遮挡 */
+.card {
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+}
+
 .character-card.selected {
     border-color: var(--ink-black);
     background: var(--ink-black);
