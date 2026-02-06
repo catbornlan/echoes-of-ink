@@ -687,18 +687,19 @@ function startSearchPhase(phase) {
     // 不切换phase，而是在game-main内部显示搜证界面
     // 隐藏消息容器和输入区域
     const messagesContainer = document.getElementById('messages-container');
-    const inputArea = messagesContainer?.parentElement;
+    const inputArea = document.getElementById('input-area-container');
     if (messagesContainer) messagesContainer.classList.add('hidden');
     if (inputArea) inputArea.classList.add('hidden');
 
-    // 显示搜证界面
-    const searchPhase = document.getElementById('phase-search');
-    if (searchPhase) {
-        searchPhase.classList.remove('hidden');
+    // 显示搜证界面 (now embedded in game-main)
+    const searchUI = document.getElementById('search-ui-container');
+    if (searchUI) {
+        searchUI.classList.remove('hidden');
     } else {
-        console.error('搜证界面容器未找到');
+        console.error('搜证界面容器未找到 (search-ui-container)');
         return;
     }
+
 
     // 禁用输入框（搜证环节不可发言）
     if (window.updateInputState) {
@@ -1058,19 +1059,24 @@ async function finishSearch() {
 // 讨论环节
 async function startDiscussPhase(phase) {
     // 确保隐藏搜证界面
-    const searchPhase = document.getElementById('phase-search');
-    if (searchPhase) {
-        searchPhase.classList.add('hidden');
+    const searchUI = document.getElementById('search-ui-container');
+    if (searchUI) {
+        searchUI.classList.add('hidden');
     }
 
     // 确保显示消息容器和输入区域
     const messagesContainer = document.getElementById('messages-container');
-    const inputArea = messagesContainer?.parentElement;
+    const inputArea = document.getElementById('input-area-container');
     if (messagesContainer) messagesContainer.classList.remove('hidden');
     if (inputArea) inputArea.classList.remove('hidden');
 
     // 确保在game-main phase
     goToPhase(GAME_PHASES.GAME_MAIN);
+
+    // 启用输入框 - 讨论环节允许发言
+    if (window.updateInputState) {
+        window.updateInputState();
+    }
 
     try {
         ui.showLoading(true, '即将投票', '经过激烈的讨论和搜证，每个人心中都有了自己的答案…');
@@ -1099,6 +1105,9 @@ async function startDiscussPhase(phase) {
 async function startVotePhase() {
     console.log('Starting Vote Phase...');
     ui.updatePhaseIndicator('vote');
+
+    // Switch to vote phase UI immediately
+    goToPhase(GAME_PHASES.VOTE);
 
     try {
         ui.showLoading(true, '统计票数', '所有人的选择已做出，真相即将揭晓…');
@@ -1135,7 +1144,6 @@ async function startVotePhase() {
         );
     }
 
-    goToPhase(GAME_PHASES.VOTE);
 }
 
 // 提交投票

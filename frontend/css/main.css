@@ -254,6 +254,7 @@ body {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -321,6 +322,9 @@ body {
 .sidebar-tabs {
     display: flex;
     border-bottom: 2px solid var(--ink-light);
+    position: relative;
+    z-index: 50;
+    pointer-events: auto;
 }
 
 .sidebar-tab {
@@ -333,6 +337,9 @@ body {
     font-size: 1rem;
     color: var(--ink-gray);
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 51;
+    pointer-events: auto;
 }
 
 .sidebar-tab.active {
@@ -430,7 +437,9 @@ body {
 }
 
 /* 真相揭晓 */
-.vote-result, .ending-epilogue, .truth-reveal {
+.vote-result,
+.ending-epilogue,
+.truth-reveal {
     max-width: 800px;
     background: rgba(255, 255, 255, 0.9);
     padding: 30px;
@@ -440,7 +449,9 @@ body {
     font-size: 1.1rem;
 }
 
-.vote-result h3, .ending-epilogue h3, .truth-reveal h3 {
+.vote-result h3,
+.ending-epilogue h3,
+.truth-reveal h3 {
     margin-bottom: 1rem;
     font-size: 1.5rem;
     letter-spacing: 0.2rem;
@@ -491,11 +502,11 @@ body {
     .character-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .location-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .sidebar {
         display: none;
     }

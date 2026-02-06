@@ -99,9 +99,24 @@ async def get_game_state():
 async def advance_phase():
     """Advance to next game phase."""
     try:
+        if not game_manager.game_state:
+            print("[advance_phase] Error: Game state is None")
+            raise HTTPException(status_code=400, detail="Game not started. Please start a new game first.")
+        
+        current = game_manager.game_state.current_phase
+        print(f"[advance_phase] Current phase: {current}")
+        
         new_phase = game_manager.advance_phase()
+        print(f"[advance_phase] Advanced to: {new_phase}")
+        
         return {"current_phase": new_phase}
+    except ValueError as e:
+        print(f"[advance_phase] ValueError: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        print(f"[advance_phase] Unexpected error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
 
 

@@ -139,13 +139,21 @@ class UIManager {
 
     // 显示环节过渡描写
     showPhaseNarrative(narrative) {
-        const container = document.getElementById('phase-narrative');
-        container.innerHTML = narrative;
-        container.classList.remove('hidden');
+        const overlay = document.getElementById('phase-narrative');
+        if (!overlay) return;
 
-        setTimeout(() => {
-            container.classList.add('hidden');
-        }, 5000);
+        overlay.textContent = narrative;
+        overlay.classList.remove('hidden');
+
+        // 自动5秒后隐藏，或点击隐藏
+        const hideOverlay = () => {
+            overlay.classList.add('hidden');
+            overlay.removeEventListener('click', hideOverlay);
+        };
+
+        overlay.addEventListener('click', hideOverlay);
+
+        setTimeout(hideOverlay, 5000);
     }
 
     // 更新阶段指示器
