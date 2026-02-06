@@ -74,32 +74,55 @@ class UIManager {
     renderCharacterGrid(characters, containerId, onSelect) {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
+        container.classList.add('perspective-1000'); // Add perspective for 3D flip
 
         characters.forEach((char, index) => {
-            const portraitUrl = `https://api.dicebear.com/9.x/notionists/svg?seed=${char.id}`;
+            // Mapping character ID to card image
+            // Default fallbacks for special cases like 'suicide' or random
+            let cardImage = `/static/img/card-${char.id}.jpg`;
+            if (char.id === 'suicide') cardImage = 'https://placehold.co/400x600/000000/FFF?text=自杀';
 
-            const card = document.createElement('div');
-            card.className = 'card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition-all';
-            // 移除动画以确保可点击
-            // card.style.animationDelay = `${index * 0.1}s`;
+            const cardWrapper = document.createElement('div');
+            // Responsive sizing:
+            // 1. Height based on Viewport Height (35vh) to allow 2 rows to fit on screen.
+            // 2. Width auto-adjusted by aspect-ratio.
+            // 3. Max properties to prevent over-sizing on large screens.
+            // 4. Flex shrinking allowed for very small screens.
+            cardWrapper.className = 'character-card-wrapper h-[40vh] sm:h-[35vh] md:h-[40vh] max-h-[500px] w-auto aspect-[2/3] mx-auto cursor-pointer relative group';
+            cardWrapper.style.aspectRatio = '2/3';
 
-            card.innerHTML = `
-                <figure class="px-10 pt-10">
-                    <img src="${portraitUrl}" alt="${char.name}" class="rounded-xl h-32 w-32 object-cover pointer-events-none" />
-                </figure>
-                <div class="card-body items-center text-center pointer-events-none">
-                    <h2 class="card-title">${char.name}</h2>
-                    <p class="text-sm opacity-70">${char.role}，${char.age}岁</p>
+            // The inner container that flips
+            cardWrapper.innerHTML = `
+                <div class="character-card-inner relative w-full h-full transition-transform duration-500 transform-style-3d group-hover:rotate-y-180">
+                    <!-- Front Side -->
+                    <div class="character-card-front absolute w-full h-full backface-hidden rounded-xl overflow-hidden shadow-xl">
+                        <img src="${cardImage}" alt="${char.name}" class="w-full h-full object-cover block" 
+                             onerror="console.error('Failed to load image:', this.src); this.src='https://placehold.co/400x600?text=${char.name}'; this.style.objectFit='contain';" />
+                    </div>
+                    
+                    <!-- Back Side -->
+                    <div class="character-card-back absolute w-full h-full backface-hidden rotate-y-180 bg-neutral text-neutral-content rounded-xl p-6 flex flex-col justify-between shadow-xl" style="background-color: #1a1a1a;">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2 text-primary" style="font-family: 'XiaoZhuan', serif;">${char.name}</h2>
+                            <p class="text-xl opacity-75 mb-4">${char.age}岁 · ${char.role}</p>
+                            <div class="divider my-2"></div>
+                            <p class="text-sm leading-relaxed text-justify opacity-90">${char.summary || '暂无简介'}</p>
+                        </div>
+                        <div class="text-center mt-4">
+                            <span class="btn btn-outline btn-sm btn-primary">选择此角色</span>
+                        </div>
+                    </div>
                 </div>
             `;
 
-            // 确保点击事件直接绑定到card
-            card.onclick = (e) => {
+            // Click event triggers selection (same as before)
+            cardWrapper.onclick = (e) => {
                 e.stopPropagation();
-                console.log('Card clicked (onclick):', char.name);
-                onSelect(char, card);
+                console.log('Card clicked:', char.name);
+                onSelect(char, cardWrapper);
             };
-            container.appendChild(card);
+
+            container.appendChild(cardWrapper);
         });
     }
 
@@ -230,28 +253,10 @@ class UIManager {
 
                 card.innerHTML = `
                     <div class="location-name">${loc.name}</div>
-                    <div class="location-description">${loc.description}</div>
+                    <div class="location-description" style="min-height: 3em;">${loc.description}</div>
                     <div class="evidence-count ${isDisabled ? 'empty' : ''}">
                         剩余证据: ${remainingCount}
                     </div>
-                    ${isRound2 && collectedAtLocation.length > 0 ? `
-                        <div class="deep-search-hint" style="margin-top: 8px; font-size: 0.9em; color: var(--subtle-red);">
-                            可深度调查(${collectedAtLocation.length}个证据)
-                        </div>
-                    ` : ''}
-                    ${isRound2 && collectedAtLocation.length > 0 ? `
-                        <div class="collected-evidence-section" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);">
-                            <div style="font-weight: bold; margin-bottom: 8px;">已收集证据：</div>
-                            ${collectedAtLocation.map(ev => `
-                                <div class="evidence-deep-item" style="margin-bottom: 8px; padding: 8px; background: rgba(200,150,100,0.1); border-radius: 4px;">
-                                    <div style="font-weight: bold;">${ev.label}</div>
-                                    <button class="deep-search-btn" data-location="${loc.id}" data-evidence="${ev.id}" style="margin-top: 4px; padding: 4px 12px; background: var(--accent-red); color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                        🔍 深度调查 (2点)
-                                    </button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
                 `;
 
                 // 普通搜证点击 - 绑定到整个卡片
@@ -266,35 +271,76 @@ class UIManager {
                     });
                 }
 
-                // 第二轮：可以展开查看深度调查选项
-                if (isRound2 && collectedAtLocation.length > 0) {
-                    const hint = card.querySelector('.deep-search-hint');
-                    const section = card.querySelector('.collected-evidence-section');
 
-                    if (hint && section) {
-                        hint.style.cursor = 'pointer';
-                        hint.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const isExpanded = section.style.display !== 'none';
-                            section.style.display = isExpanded ? 'none' : 'block';
-                            hint.textContent = isExpanded ? `可深度调查(${collectedAtLocation.length}个证据)` : '收起';
-                        });
-                    }
-
-                    // 深度调查按钮点击
-                    card.querySelectorAll('.deep-search-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const locationId = btn.dataset.location;
-                            const evidenceId = btn.dataset.evidence;
-                            const location = gameState.locations.find(l => l.id === locationId);
-                            onSelect(location, evidenceId, true); // 第三个参数 true 表示深度调查
-                        });
-                    });
-                }
 
                 container.appendChild(card);
             });
+
+            // 2. 渲染深度调查卡片 (第二轮且有可调查线索)
+            if (isRound2) {
+                // 找出所有已知(已收集或公开)且可深度调查的证据
+                const knownEvidenceIds = new Set([
+                    ...gameState.collectedEvidence.map(e => e.id),
+                    ...gameState.publicEvidence
+                ]);
+
+                // 筛选出所有支持深度调查的证据
+                const deepTargets = gameState.allEvidence.filter(ev =>
+                    knownEvidenceIds.has(ev.id) && ev.deep_investigation_cost
+                );
+
+                deepTargets.forEach(ev => {
+                    const card = document.createElement('div');
+                    card.className = 'location-card deep-investigation-card';
+                    // 样式区别 - 使用 inline style 确保覆盖
+                    card.style.border = '2px solid var(--accent-red, #c83232)';
+                    card.style.background = 'linear-gradient(to bottom right, #fff, rgba(200, 50, 50, 0.05))';
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+
+                    const location = gameState.locations.find(l => l.id === ev.location);
+                    const locName = location ? location.name : '未知地点';
+
+                    // 检查进度
+                    const totalChildren = gameState.allEvidence.filter(e => e.parent_id === ev.id).length;
+                    const foundChildren = gameState.collectedEvidence.filter(e => e.parent_id === ev.id).length;
+                    const isFullyInvestigated = totalChildren > 0 && foundChildren >= totalChildren;
+
+                    card.innerHTML = `
+                        <div class="location-name" style="color: var(--accent-red); display: flex; align-items: center; gap: 8px; font-size: 1.25em;">
+                            <span>🔍 深度调查</span>
+                        </div>
+                        <div class="location-description" style="font-weight: bold; margin: 12px 0; color: #333; font-size: 1.1em; line-height: 1.4;">
+                            线索：${ev.label}
+                        </div>
+                        <div class="location-description" style="font-size: 0.9em; opacity: 0.8; margin-bottom: 15px;">
+                            来源: ${locName}
+                        </div>
+                        
+                        <div style="margin-top: auto; padding-top: 10px; width: 100%;">
+                            ${isFullyInvestigated ?
+                            '<div class="badge badge-success w-full py-4 text-base">✅ 已完成调查</div>' :
+                            `<button class="btn btn-primary w-full deep-search-btn text-base" style="background-color: var(--accent-red); border-color: var(--accent-red); min-height: 3rem;">
+                                    投入精力 (-${ev.deep_investigation_cost})
+                                </button>`
+                        }
+                        </div>
+                    `;
+
+                    if (!isFullyInvestigated) {
+                        const btn = card.querySelector('.deep-search-btn');
+                        if (btn) {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const loc = gameState.locations.find(l => l.id === ev.location);
+                                onSelect(loc, ev.id, true); // true for deep investigation
+                            });
+                        }
+                    }
+
+                    container.appendChild(card);
+                });
+            }
         } catch (e) {
             console.error('[renderLocations] Error rendering locations:', e);
             const container = document.getElementById('location-grid');
@@ -314,9 +360,15 @@ class UIManager {
             return;
         }
 
-        container.innerHTML = '<h4>收集的证据</h4>';
+        // 清空容器
+        container.innerHTML = '';
 
-        console.log(`[renderEvidence] Rendering ${evidenceList.length} evidence items to ${container.id || 'container'} `);
+        const title = document.createElement('h3');
+        title.style.marginBottom = '12px';
+        title.textContent = showPublicButton ? '我的证据' : '公开证据';
+        container.appendChild(title);
+
+        console.log(`[renderEvidence] Rendering ${evidenceList.length} evidence items`);
 
         // 如果没有证据，显示提示
         if (!evidenceList || evidenceList.length === 0) {
@@ -365,6 +417,7 @@ class UIManager {
             }
 
             container.appendChild(evDiv);
+            console.log(`[renderEvidence] Appended item: ${ev.label}`);
         });
     }
 
@@ -437,7 +490,7 @@ class UIManager {
             const collectedContainer = document.getElementById('collected-evidence-list');
             if (collectedContainer) {
                 if (gameState.collectedEvidence && gameState.collectedEvidence.length > 0) {
-                    collectedContainer.innerHTML = '<h3 style="margin-bottom: 12px;">我的证据</h3>';
+                    // Remove innerHTML assignment, let renderEvidence handle it
                     this.renderEvidence(gameState.collectedEvidence, collectedContainer, true);
                 } else {
                     collectedContainer.innerHTML = `
@@ -453,7 +506,12 @@ class UIManager {
             if (publicContainer) {
                 if (gameState.publicEvidence && gameState.publicEvidence.length > 0) {
                     publicContainer.innerHTML = '<h3 style="margin-bottom: 12px;">公开证据</h3>';
-                    this.renderEvidence(gameState.publicEvidence, publicContainer, false);
+                    // publicEvidence存的是ID，需要转换为对象
+                    const publicEvidenceObjs = gameState.publicEvidence
+                        .map(id => gameState.getEvidence(id) || gameState.collectedEvidence.find(e => e.id === id))
+                        .filter(e => e); // 过滤掉找不到的
+
+                    this.renderEvidence(publicEvidenceObjs, publicContainer, false);
                 } else {
                     publicContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: #999;">
@@ -515,30 +573,53 @@ class UIManager {
 
         // 获取故事还原
         const storyTruth = await this.getStoryTruth();
+        const formattedTruth = this.formatStoryTruth(storyTruth.truth_story);
+
+        let epilogueContent = typeof epilogueText === 'object' ? (epilogueText.content || JSON.stringify(epilogueText)) : epilogueText;
+        // Clean up common bad formatting: replace literal '\n' and newline chars with <br>
+        if (epilogueContent) {
+            epilogueContent = epilogueContent.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+        }
 
         container.innerHTML = `
             <div style="padding: 20px; max-width: 900px; margin: 0 auto;">
                 <h2 style="color: var(--accent-red); text-align: center; font-size: 2.5em; margin-bottom: 40px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
                     📜 游戏结局
                 </h2>
-                
-                <!-- 结局续写 -->
-                <div class="epilogue-section" style="background: linear-gradient(135deg, rgba(200,150,100,0.08) 0%, rgba(150,100,50,0.08) 100%); padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); border: 2px solid var(--accent-red);">
-                    <h3 style="color: var(--accent-red); font-size: 1.8em; margin-bottom: 20px; text-align: center;">
-                        ${voteResult?.is_correct ? '✓ 真相大白' : '✗ 误判悲剧'}
-                    </h3>
-                    <div style="line-height: 2; white-space: pre-wrap; font-size: 1.05em; color: #333;">
-                        ${typeof epilogueText === 'object' ? (epilogueText.content || JSON.stringify(epilogueText)) : epilogueText}
-                    </div>
-                </div>
-                
-                <!-- 故事还原 -->
+
+                <!-- 1. 故事还原 (Priority 1) -->
                 <div class="truth-section" style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 6px 12px rgba(0,0,0,0.15); border-left: 5px solid var(--accent-red);">
                     <h3 style="color: var(--accent-red); font-size: 1.8em; margin-bottom: 20px; border-bottom: 3px solid var(--accent-red); padding-bottom: 12px;">
                         🔍 ${storyTruth.title} · 真相还原
                     </h3>
-                    <div style="line-height: 2; white-space: pre-wrap; font-size: 1.02em; color: #444;">
-                        ${this.formatStoryTruth(storyTruth.truth_story)}
+                    <div style="line-height: 2; font-size: 1.02em; color: #444;">
+                        ${formattedTruth}
+                    </div>
+                </div>
+
+                <!-- 2. 投票结果 (Priority 2) -->
+                <div class="vote-section" style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    <h3 style="color: var(--accent-red); font-size: 1.6em; margin-bottom: 15px;">投票结果</h3>
+                    <p style="font-size: 1.1em; margin-bottom: 10px;">被投票者: <strong>${voteResult?.voted_character_name || '未知'}</strong></p>
+                    <div style="margin-bottom: 15px;">
+                        <ul style="list-style-type: disc; padding-left: 20px;">
+                            ${voteResult?.vote_counts ? Object.entries(voteResult.vote_counts).map(([char, count]) =>
+            `<li>${gameState.getCharacter(char)?.name || char}: ${count}票</li>`
+        ).join('') : ''}
+                        </ul>
+                    </div>
+                    <div style="padding: 15px; border-radius: 8px; background-color: ${voteResult?.is_correct ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${voteResult?.is_correct ? '#86efac' : '#fca5a5'}; color: ${voteResult?.is_correct ? '#166534' : '#991b1b'}; font-weight: bold; font-size: 1.2em; text-align: center;">
+                        ${voteResult?.is_correct ? '✓ 恭喜！这一票投对了！真凶就是小马！' : '✗ 很遗憾，投错了... 真凶其实是小马。'}
+                    </div>
+                </div>
+                
+                <!-- 3. 结局续写 (Priority 3) -->
+                <div class="epilogue-section" style="background: linear-gradient(135deg, rgba(200,150,100,0.08) 0%, rgba(150,100,50,0.08) 100%); padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); border: 2px solid var(--accent-red);">
+                    <h3 style="color: var(--accent-red); font-size: 1.8em; margin-bottom: 20px; text-align: center;">
+                        END · 终章
+                    </h3>
+                    <div style="line-height: 2; font-size: 1.05em; color: #333; text-align: justify;">
+                        ${epilogueContent}
                     </div>
                 </div>
                 

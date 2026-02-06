@@ -109,6 +109,10 @@ class GodDirector:
 4. 形态描写要生动，增强沉浸感
 5. 不要让角色无脑公开所有秘密
 6. 根据已公开证据调整发言策略
+7. Action Rules
+   - Use actions to describe movements or expressions: "Thinking...", "Looking suspicious...", "Sighs deeply"
+   - To REVEAL a piece of evidence you found, include this tag in your content: [REVEAL: Evidence Name]
+   - Example: "I found something interesting... [REVEAL: Bloody Handkerchief]"
 """
         return prompt
     
@@ -119,25 +123,73 @@ class GodDirector:
         duration: int = 180
     ) -> ScriptBatch:
         """
-        批量生成3分钟群聊剧本.
+        批量生成剧本.
         
         Args:
             phase: 当前游戏阶段
-            context: 当前局势（已公开证据、对话历史、怀疑度等）
-            duration: 生成时长（秒），默认180秒
-        
+            context: 当前局势
+            duration: 生成时长
+            
         Returns:
-            ScriptBatch: 批量生成的剧本
+            ScriptBatch: 生成的剧本
         """
+        # 特殊处理：自我介绍环节 (INTRO)
+        # 固定顺序：薛名医 -> 杏儿花 -> 小马 -> 李四 -> 夏仙姑 -> 吴村霸
+        # 且跳过玩家角色（用户最后发言）
+        if phase == GamePhase.INTRO:
+            intro_order = ['xueming', 'xingerhua', 'xiaoma', 'lisi', 'xiaoxianggu', 'wuxingque']
+            player_char = context.get('player_character')
+            
+            messages = []
+            timestamp = 0
+            
+            for char_id in intro_order:
+                # 跳过玩家角色
+                if char_id == player_char:
+                    continue
+                    
+                char = self.characters.get(char_id)
+                if not char:
+                    continue
+                    
+                messages.append(Message(
+                    speaker=char.name,
+                    content=char.preset_intro,
+                    action="自我介绍",
+                    timestamp=timestamp,
+                    is_player=False
+                ))
+                timestamp += 5  # 每隔5秒一个介绍
+                
+            return ScriptBatch(
+                messages=messages,
+                duration=timestamp,
+                phase=phase
+            )
+
         system_prompt = self._build_system_prompt()
         
+        # 获取玩家角色ID
+        player_char_id = context.get('player_character')
+        player_char_name = self.characters[player_char_id].name if player_char_id in self.characters else "玩家"
+
         # 构建上下文提示
         context_prompt = f"""
 ## 当前阶段
 {phase.value}
 
-## 已公开证据
+## 重要指令
+***绝对不要为玩家角色"{player_char_name}"生成台词！***
+***你只能控制NPC进行发言。***
+***玩家({player_char_name})的发言由用户自己输入。***
+***如果玩家发言了，请让相关NPC针对玩家的发言做出反应。***
+
+## 已公开证据 (Public Evidence)
 {json.dumps(context.get('public_evidence', []), ensure_ascii=False, indent=2)}
+
+## 调查团已掌握但未公开的证据 (Private Evidence Known to Group)
+{json.dumps(context.get('private_evidence', []), ensure_ascii=False, indent=2)}
+注意：以上证据已被搜到但尚未公开。如果符合角色动机（如想以此攻击对手、洗清嫌疑或转移注意），请在发言中使用 [REVEAL: Evidence Name] 标签将其公开。
 
 ## 对话历史（最近10条）
 {json.dumps(context.get('recent_messages', []), ensure_ascii=False, indent=2)}
@@ -397,7 +449,7 @@ class GodDirector:
             
             response_text = response.text.strip()
             if response_text.startswith('```'):
-                response_text = response_text.split('\n', 1)[1]
+                response_text = response_text.split('\\n', 1)[1]
                 response_text = response_text.rsplit('```', 1)[0]
             
             votes = json.loads(response_text)
@@ -411,6 +463,70 @@ class GodDirector:
                 for char_id in self.characters.keys() 
                 if char_id != context.get('player_character')
             }
+
+    def decide_evidence_reveal(self, context: Dict[str, Any], char_findings: Dict[str, List[Any]]) -> List[str]:
+        """
+        决定哪些证据应该被公开.
+        
+        Args:
+            context: 游戏上下文
+            char_findings: 每个角色本轮搜到的证据 {char_id: [Evidence objects]}
+            
+        Returns:
+            List[str]: 需要公开的证据ID列表
+        """
+        import random
+        ids_to_publish = []
+        
+        print(f"[AI Director] Deciding evidence reveal for {len(char_findings)} characters...")
+        
+        for char_id, findings in char_findings.items():
+            if not findings:
+                continue
+                
+            char = self.characters.get(char_id)
+            if not char:
+                continue
+                
+            print(f"[AI Director] Analyzing {len(findings)} findings for {char.name}")
+            
+            # Simple strategy:
+            # 1. Self-preservation: Unlikely to reveal evidence that implicates themselves (location matches their character ID)
+            # 2. Aggressive/Honest: Likely to reveal evidence about others
+            # 3. Random variance
+            
+            for ev in findings:
+                reveal_chance = 0.6 # Base chance 60%
+                
+                # Check for self-implication
+                is_self_evidence = (ev.location == char_id)
+                if is_self_evidence:
+                    reveal_chance -= 0.4 # Reduce to 20%
+                    print(f"  - Evidence {ev.label} is self-implicating for {char.name}, chance reduced.")
+                else:
+                    reveal_chance += 0.2 # Increase to 80% for others' secrets
+                    
+                # Role-based adjustments (simplified)
+                if char_id == 'xiaoma': # Killer
+                    if '血迹' in ev.content or '匕首' in ev.content:
+                        reveal_chance = 0.0 # Never self-report murder weapon
+                    elif is_self_evidence:
+                        reveal_chance = 0.1 # Very low chance for own secrets
+                    else:
+                        reveal_chance = 0.9 # High chance to frame others
+                        
+                elif char_id == 'wuxingque': # Village bully, aggressive
+                     if not is_self_evidence:
+                         reveal_chance = 0.95
+                         
+                # Roll dice
+                if random.random() < reveal_chance:
+                    ids_to_publish.append(ev.id)
+                    print(f"  -> Decided to REVEAL {ev.label} (Chance: {reveal_chance:.2f})")
+                else:
+                    print(f"  -> Decided to KEEP {ev.label} (Chance: {reveal_chance:.2f})")
+                    
+        return ids_to_publish
     
     def generate_phase_transition(
         self, 

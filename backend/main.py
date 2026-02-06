@@ -14,7 +14,8 @@ from backend.models import (
     GamePhase
 )
 from backend.game_logic import game_manager
-from backend.ai_director import god_director
+from backend.ai_director import god_director # Trigger reload for character data update (Try 3)
+
 
 app = FastAPI(title="Murder Mystery Game API")
 
@@ -263,8 +264,11 @@ async def ai_search(request: Dict[str, Any]):
         collected_ids = request.get('collected_ids', [])
         current_round = request.get('current_round', 1)
         
-        found = game_manager.perform_ai_search(collected_ids, current_round)
-        return {"evidence": found}
+        found, public_ids = game_manager.perform_ai_search(collected_ids, current_round)
+        return {
+            "found": found,
+            "public_evidence_ids": public_ids
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -26,6 +26,7 @@ class Character(BaseModel):
     is_murderer: bool
     avatar: str
     preset_intro: str
+    summary: str
     motivation: str
     secrets: List[str]
     personality: str

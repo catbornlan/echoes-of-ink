@@ -25,6 +25,8 @@ class GameManager:
         with open('backend/data/characters.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
             self.characters = {c['id']: Character(**c) for c in data['characters']}
+            # Reload triggered
+
         
         # Game state (will be initialized when game starts)
         self.game_state: Optional[GameState] = None
@@ -147,7 +149,7 @@ class GameManager:
         
         return found_evidence
     
-    def perform_ai_search(self, collected_ids: List[str], current_round: int) -> List[Evidence]:
+    def perform_ai_search(self, collected_ids: List[str], current_round: int) -> tuple[List[Evidence], List[str]]:
         """
         Perform randomized search for AI characters.
         
@@ -156,59 +158,86 @@ class GameManager:
             current_round: Current search round (1 or 2)
         
         Returns:
-            List[Evidence]: Evidence found by AI this turn
+            tuple: (List[Evidence], List[str]) - Found evidence and newly public evidence IDs
         """
         if not self.game_state:
-            return []
+            return [], []
             
         import random
+        from backend.ai_director import god_director  # Delayed import to avoid circular dependency
         
         found_evidence = []
+        newly_public_ids = []
+        char_findings = {} # {char_id: [Evidence]}
         
-        # 根据轮次计算AI可用的总行动点（所有NPC共享）
-        # 假设有5个NPC，每个NPC应该尽量用完点数
-        max_actions = 3 if current_round == 1 else 2  # 每个AI尝试搜索的次数
+        # 1. 确定玩家角色，排除之
+        player_id = self.game_state.player_character
         
-        for _ in range(max_actions):
-            # Filter available evidence
-            available_evidence = []
-            for ev in self.evidence.values():
-                if ev.id in collected_ids:
-                    continue
-                if ev.id in self.game_state.collected_evidence:
-                    continue
-                    
-                # Round 1: No deep evidence
-                if current_round == 1 and ev.is_deep:
-                    continue
-                    
-                # Round 2: Can find deep evidence if parent is collected
-                if current_round == 2 and ev.is_deep:
-                    if ev.parent_id not in self.game_state.collected_evidence:
-                         continue
+        # 2. 遍历所有NPC
+        for char_id_key, char in self.characters.items():
+            if char_id_key == player_id:
+                continue
                 
-                available_evidence.append(ev)
+            # 每个NPC有2点行动点（默认策略）
+            action_points = 2
+            char_findings[char_id_key] = []
             
-            if not available_evidence:
-                break
+            for _ in range(action_points):
+                # Max retries to find valid evidence
+                for _ in range(5): 
+                    # 筛选可用证据
+                    available_evidence = []
+                    for ev in self.evidence.values():
+                        # 已经被任何人搜到过（在 collected_evidence 中）则不能再搜
+                        # 改进：如果已被搜出，就不再搜，避免浪费AP
+                        if ev.id in self.game_state.collected_evidence:
+                            continue
+                            
+                        # Round 1: No deep evidence
+                        if current_round == 1 and ev.is_deep:
+                            continue
+                            
+                        # Round 2: Can find deep evidence if parent is known TO THE GROUP (public) or TO THE SEEKER (private)
+                        # 简化：如果前置证据已被搜出（collected），则可以搜深入证据
+                        if current_round == 2 and ev.is_deep:
+                             if ev.parent_id not in self.game_state.collected_evidence:
+                                 continue
+                        
+                        available_evidence.append(ev)
+                    
+                    if not available_evidence:
+                        break
+                        
+                    # 随机选择一个搜证
+                    target = random.choice(available_evidence)
+                    
+                    # 更新全局状态
+                    if target.id not in self.game_state.collected_evidence:
+                        self.game_state.collected_evidence.append(target.id)
+                        # 记录发现
+                        found_evidence.append(target)
+                        char_findings[char_id_key].append(target)
+                        break # Found valid target, use 1 AP
+                    else:
+                        # Should not happen with check above, but purely safe guard
+                        continue
                 
-            # Pick one random evidence (70% success rate)
-            if random.random() < 0.7:
-                target = random.choice(available_evidence)
-                self.game_state.collected_evidence.append(target.id)
-                found_evidence.append(target)
-                
-                # 30% chance to make evidence public immediately
-                # 真凶小马会更谨慎，只有10%概率公开
-                # 其他角色30%概率公开
-                is_murderer_evidence = 'xiaoma' in target.content.lower() or target.location == 'xiaoma'
-                public_chance = 0.1 if is_murderer_evidence else 0.35
-                
-                if random.random() < public_chance:
-                    if target.id not in self.game_state.public_evidence:
-                        self.game_state.public_evidence.append(target.id)
+        # 3. 调用 AI Director 决定是否公开
+        # 构建当前上下文
+        context = {
+            'public_evidence': self.game_state.public_evidence,
+            'suspicion_levels': self._calculate_suspicion_levels()
+        }
         
-        return found_evidence
+        # 获取公开决策
+        ids_to_publish = god_director.decide_evidence_reveal(context, char_findings)
+        
+        for evid in ids_to_publish:
+            if evid not in self.game_state.public_evidence:
+                self.game_state.public_evidence.append(evid)
+                newly_public_ids.append(evid)
+                
+        return found_evidence, newly_public_ids
 
     
     def make_evidence_public(self, evidence_id: str) -> bool:
@@ -323,7 +352,17 @@ class GameManager:
             ],
             'suspicion_levels': suspicion_levels,
             'collected_evidence_count': len(self.game_state.collected_evidence),
-            'public_evidence_count': len(self.game_state.public_evidence)
+            'public_evidence_count': len(self.game_state.public_evidence),
+            'private_evidence': [
+                {
+                    'id': ev_id,
+                    'label': self.evidence[ev_id].label,
+                    'content': self.evidence[ev_id].content,
+                    'location': self.evidence[ev_id].location
+                }
+                for ev_id in self.game_state.collected_evidence
+                if ev_id not in self.game_state.public_evidence and ev_id in self.evidence
+            ]
         }
     
     def _calculate_suspicion_levels(self) -> Dict[str, int]:

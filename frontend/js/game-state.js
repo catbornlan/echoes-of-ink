@@ -188,19 +188,59 @@ class GameState {
             }
 
             const found = await response.json();
+            console.log('[searchEvidence] Response:', found); // DEBUG LOG
+
+            // Ensure found is an array
+            const foundArray = Array.isArray(found) ? found : [found];
 
             // 更新本地状态
-            found.forEach(ev => {
+            foundArray.forEach(ev => {
                 if (!this.collectedEvidence.find(e => e.id === ev.id)) {
                     this.collectedEvidence.push(ev);
                 }
             });
+
+            // 更新本地行动点数
+            if (this.currentPhase === 'search_1') {
+                this.actionPoints.round1 -= actionPoints;
+            } else if (this.currentPhase === 'search_2') {
+                this.actionPoints.round2 -= actionPoints;
+            } else {
+                // Fallback based on logic if phase is string
+                if (this.currentPhase && this.currentPhase.includes('1')) {
+                    this.actionPoints.round1 -= actionPoints;
+                } else {
+                    this.actionPoints.round2 -= actionPoints;
+                }
+            }
+
+            this.save(); // 保存状态
 
             return found;
         } catch (error) {
             console.error('Failed to search evidence:', error);
             throw error;
         }
+    }
+
+    // 从服务器同步状态
+    async syncState() {
+        try {
+            const response = await fetch(`${API_BASE}/game/state`);
+            if (response.ok) {
+                const serverState = await response.json();
+                this.playerCharacter = serverState.player_character;
+                this.currentPhase = serverState.current_phase;
+                this.actionPoints.round1 = serverState.round_1_action_points;
+                this.actionPoints.round2 = serverState.round_2_action_points;
+                // Sync other fields if necessary
+                console.log('Game state synced from server:', this.actionPoints);
+                return true;
+            }
+        } catch (error) {
+            console.warn('Failed to sync state from server:', error);
+        }
+        return false;
     }
 
     // 公开证据
@@ -282,13 +322,21 @@ class GameState {
     // 获取结局续写
     async getEndingEpilogue() {
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
             const response = await fetch(`${API_BASE}/director/ending_epilogue`, {
-                method: 'POST'
+                method: 'POST',
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             return await response.json();
         } catch (error) {
             console.error('Failed to get ending epilogue:', error);
-            throw error;
+            // Default ending if timeout or error
+            return {
+                content: "迷雾终将散去，但真相的代价往往沉重。无论结局如何，故事中的每个人都将带着各自的秘密继续前行。或许，这正是命运早已写好的剧本..."
+            };
         }
     }
 

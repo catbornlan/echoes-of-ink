@@ -101,8 +101,13 @@ function setupAllEventListeners() {
             // 显示对应内容
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
+                content.classList.remove('active');
             });
-            document.getElementById(`${targetTab}-tab`)?.classList.remove('hidden');
+            const targetContent = document.getElementById(`${targetTab}-tab`);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+            }
 
             // 切换标签时刷新侧边栏内容（特别是证据列表）
             ui.updateSidebar();
@@ -191,6 +196,16 @@ async function selectCharacter(character) {
         goToPhase(GAME_PHASES.READ_SCRIPT);
 
         // 显示剧本
+        const tachieImg = document.getElementById('script-tachie');
+        if (tachieImg) {
+            // User requested to use card images instead of tachie
+            tachieImg.src = `/static/img/card-${character.id}.jpg`;
+            tachieImg.style.display = 'block';
+            tachieImg.classList.add('opacity-0');
+            // Add some specific styling for card images (rectangles) vs tachie (cutouts)
+            tachieImg.classList.add('rounded-lg', 'shadow-2xl');
+        }
+
         document.getElementById('character-name-title').textContent = character.name;
         document.getElementById('script-content').innerHTML = `
             <h3>角色：${character.role}</h3>
@@ -214,9 +229,9 @@ async function startGamePhase() {
     await startIntroPhase();
 }
 
-// 自我介绍环节（固定顺序播放）
+// 自我介绍环节（固定顺序播放，用户最后）
 async function startIntroPhase() {
-    console.log('Starting Intro Phase with fixed order...');
+    console.log('Starting Intro Phase with fixed order (User Last)...');
 
     ui.updatePhaseIndicator('intro');
 
@@ -231,10 +246,14 @@ async function startIntroPhase() {
         is_player: false
     });
 
-    // 固定顺序：薛名医-杏儿花-小马(玩家)-李四-夏仙姑-吴村霸
-    const introOrder = ['xueming', 'xingerhua', 'xiaoma', 'lisi', 'xiaoxianggu', 'wuxingque'];
+    // 默认顺序
+    const defaultOrder = ['xueming', 'xingerhua', 'xiaoma', 'lisi', 'xiaoxianggu', 'wuxingque'];
 
-    await playIntrosInOrder(introOrder);
+    // 构建最终顺序：其他角色 -> 玩家
+    const finalOrder = defaultOrder.filter(id => id !== gameState.playerCharacter);
+    finalOrder.push(gameState.playerCharacter);
+
+    await playIntrosInOrder(finalOrder);
 }
 
 // 按顺序播放自我介绍
@@ -248,32 +267,44 @@ async function playIntrosInOrder(order) {
             continue;
         }
 
+        // 区分玩家和NPC
         if (charId === gameState.playerCharacter) {
             // 玩家轮次：等待输入
             await waitForPlayerIntro(char);
+
+            // 稍作停顿
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
         } else {
-            // NPC轮次：播放预设介绍
+            // NPC：播放预设介绍
             await new Promise(resolve => setTimeout(resolve, 2000));
-            ui.addMessage({
+
+            const message = {
                 speaker: char.name,
                 content: char.preset_intro,
-                action: `${char.name}微微颔首`,
+                action: `${char.name}自我介绍`,
                 is_player: false,
                 timestamp: Date.now()
-            });
+            };
+
+            ui.addMessage(message);
+
+            // 重要：将消息同步到GameState
+            await gameState.addMessage(message);
         }
     }
 
-    // 所有人介绍完毕
+    // 所有人介绍完毕，自动进入讨论
     setTimeout(() => {
         ui.addMessage({
             speaker: '系统',
-            content: '自我介绍环节结束。现在进入圆桌讨论，你可以提出问题或分享线索。',
+            content: '自我介绍环节结束。自动进入圆桌讨论...',
             is_player: false
         });
 
+        // 自动跳转到讨论环节
         startInteractiveDiscussion();
-        updateNextPhaseButtonText(GAME_PHASES.INTRO);
+        // updateNextPhaseButtonText(GAME_PHASES.INTRO); // 不再需要按钮
     }, 2000);
 }
 
@@ -292,7 +323,7 @@ function waitForPlayerIntro(playerChar) {
         // 开放输入
         input.disabled = false;
         sendBtn.disabled = false;
-        input.placeholder = '输入你的自我介绍…';
+        input.placeholder = '请输入你的自我介绍';
         input.focus();
 
         // 创建清理函数
@@ -317,18 +348,24 @@ function waitForPlayerIntro(playerChar) {
             }
 
             // 添加玩家消息
-            ui.addMessage({
+            // 添加玩家消息
+            const message = {
                 speaker: playerChar.name,
                 content: content,
                 is_player: true,
                 timestamp: Date.now()
-            });
+            };
+
+            ui.addMessage(message);
+            // 同步到GameState，确保AI知道玩家说了什么
+            await gameState.addMessage(message);
 
             input.value = '';
             input.disabled = true;
             sendBtn.disabled = true;
 
             // 移除事件监听并完成
+            cleanup();
             cleanup();
             resolve();
         };
@@ -680,8 +717,11 @@ function updateNextPhaseButtonText(currentPhase) {
 let currentActionPoints = 0;
 let currentSearchRound = 1;
 
-function startSearchPhase(phase) {
+async function startSearchPhase(phase) {
     console.log(`开始搜证环节: ${phase}, 轮次: ${currentSearchRound}`);
+
+    // Sync state to ensure action points are up to date
+    await gameState.syncState();
 
     // 不切换phase，而是在game-main内部显示搜证界面
     // 隐藏消息容器和输入区域
@@ -765,7 +805,7 @@ function startSearchPhase(phase) {
                 if (currentActionPoints === 0) {
                     ui.showToast('搜证点数已用完，等待其他角色搜证完成...', 'success');
                     setTimeout(async () => {
-                        await triggerNPCSearch(); // NPC搜证
+                        await triggerAISearch(); // AI自动搜证
                         await advanceToNextPhase(); // 自动进入下一环节
                     }, 2000);
                 }
@@ -997,10 +1037,12 @@ async function triggerAISearch() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                collected_evidence_ids: collectedIds,
+                collected_ids: collectedIds,
                 current_round: currentSearchRound
             })
         });
+
+        console.log(`[AI搜证] API Response Status: ${response.status}`);
 
         if (!response.ok) {
             throw new Error(`AI搜证失败: ${response.status}`);
@@ -1024,14 +1066,20 @@ async function triggerAISearch() {
                     is_player: false
                 });
 
-                // 如果公开，显示详情
-                if (isPublic) {
-                    await showEvidenceModal(evidence, '未知地点', true);
-                }
+                // 如果公开，显示详情 - 移除弹窗，只显示消息
+                // if (isPublic) {
+                //    await showEvidenceModal(evidence, '未知地点', true);
+                // }
             }
 
             // 更新侧边栏
-            gameState.publicEvidence = data.public_evidence_ids || [];
+            if (data.public_evidence_ids) {
+                data.public_evidence_ids.forEach(id => {
+                    if (!gameState.publicEvidence.includes(id)) {
+                        gameState.publicEvidence.push(id);
+                    }
+                });
+            }
             ui.updateSidebar();
         } else {
             console.log('[AI搜证] AI本次未找到新证据');

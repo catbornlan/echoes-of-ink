@@ -319,7 +319,7 @@ body {
 
 /* 侧边栏 */
 .sidebar {
-    width: 350px;
+    width: 320px;
     background: white;
     border-left: 2px solid var(--ink-light);
     display: flex;
